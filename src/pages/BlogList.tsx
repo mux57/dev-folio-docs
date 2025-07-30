@@ -1,77 +1,30 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Calendar, Clock, ArrowRight, Edit, Search } from "lucide-react";
+import { Calendar, Clock, ArrowRight, Edit, Search, Eye } from "lucide-react";
 import Header from "@/components/Header";
+import { useBlogPosts } from "@/hooks/useBlogPost";
 
 const BlogList = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const { posts, loading } = useBlogPosts();
 
-  const allPosts = [
-    {
-      id: 1,
-      title: "Building Scalable React Applications",
-      excerpt: "Learn the best practices for building large-scale React applications with proper architecture and performance optimization.",
-      content: "Full content here...",
-      date: "2024-01-15",
-      readTime: "8 min read",
-      tags: ["React", "Architecture", "Performance"],
-      featured: true
-    },
-    {
-      id: 2,
-      title: "The Future of Web Development",
-      excerpt: "Exploring emerging technologies and trends that will shape the future of web development in the next decade.",
-      content: "Full content here...",
-      date: "2024-01-10",
-      readTime: "12 min read",
-      tags: ["Web Development", "Trends", "Technology"],
-      featured: true
-    },
-    {
-      id: 3,
-      title: "TypeScript Best Practices",
-      excerpt: "A comprehensive guide to writing better TypeScript code with advanced patterns and best practices.",
-      content: "Full content here...",
-      date: "2024-01-05",
-      readTime: "10 min read",
-      tags: ["TypeScript", "Best Practices", "JavaScript"],
-      featured: false
-    },
-    {
-      id: 4,
-      title: "Microservices with Node.js",
-      excerpt: "How to design and implement microservices architecture using Node.js and modern DevOps practices.",
-      content: "Full content here...",
-      date: "2023-12-28",
-      readTime: "15 min read",
-      tags: ["Node.js", "Microservices", "DevOps"],
-      featured: false
-    },
-    {
-      id: 5,
-      title: "Modern CSS Techniques",
-      excerpt: "Discover the latest CSS features and techniques for creating beautiful, responsive designs.",
-      content: "Full content here...",
-      date: "2023-12-20",
-      readTime: "7 min read",
-      tags: ["CSS", "Design", "Frontend"],
-      featured: false
-    }
-  ];
+  const filteredPosts = useMemo(() => {
+    if (!searchTerm) return posts;
+    
+    return posts.filter(post =>
+      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (post.excerpt && post.excerpt.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  }, [posts, searchTerm]);
 
-  const filteredPosts = allPosts.filter(post =>
-    post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  const handleReadPost = (postId: number) => {
-    navigate(`/blog/${postId}`);
+  const handleReadPost = (slug: string) => {
+    navigate(`/blog/${slug}`);
   };
 
   const handleWritePost = () => {
@@ -117,7 +70,7 @@ const BlogList = () => {
               <Card 
                 key={post.id} 
                 className="bg-gradient-card border-border hover:border-primary/50 transition-all duration-500 hover:shadow-portfolio-lg group cursor-pointer h-full flex flex-col"
-                onClick={() => handleReadPost(post.id)}
+                onClick={() => handleReadPost(post.slug)}
               >
                 <CardHeader className="flex-1">
                   <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
