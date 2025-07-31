@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, Menu, X } from "lucide-react";
+import ThemeSwitcher from "@/components/ThemeSwitcher";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -62,6 +63,7 @@ const Header = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
+            <ThemeSwitcher />
             <Button 
               variant="download" 
               size="sm" 
@@ -97,15 +99,18 @@ const Header = () => {
                   {item.label}
                 </button>
               ))}
-              <Button 
-                variant="download" 
-                size="sm" 
-                onClick={handleDownloadResume}
-                className="group w-fit"
-              >
-                <Download className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
-                Download Resume
-              </Button>
+              <div className="flex items-center gap-4 pt-2">
+                <ThemeSwitcher />
+                <Button 
+                  variant="download" 
+                  size="sm" 
+                  onClick={handleDownloadResume}
+                  className="group w-fit"
+                >
+                  <Download className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
+                  Download Resume
+                </Button>
+              </div>
             </div>
           </div>
         )}
