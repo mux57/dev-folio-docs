@@ -1,11 +1,16 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Download, Menu, X } from "lucide-react";
+import { Download, Menu, X, User, LogOut } from "lucide-react";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
+import AuthDialog from "@/components/AuthDialog";
+import { supabase } from "@/integrations/supabase/client";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -15,10 +20,28 @@ const Header = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const handleDownloadResume = () => {
     import("@/utils/resumeDownload").then(({ downloadResume }) => {
       downloadResume();
     });
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
   };
 
   const scrollToSection = (sectionId: string) => {
@@ -64,6 +87,34 @@ const Header = () => {
 
           <div className="hidden md:flex items-center space-x-4">
             <ThemeSwitcher />
+            
+            {user ? (
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-muted-foreground">
+                  {user.email}
+                </span>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleSignOut}
+                  className="gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowAuthDialog(true)}
+                className="gap-2"
+              >
+                <User className="h-4 w-4" />
+                Sign In
+              </Button>
+            )}
+            
             <Button 
               variant="download" 
               size="sm" 
@@ -99,8 +150,36 @@ const Header = () => {
                   {item.label}
                 </button>
               ))}
-              <div className="flex items-center gap-4 pt-2">
+              <div className="flex flex-col gap-4 pt-2">
                 <ThemeSwitcher />
+                
+                {user ? (
+                  <div className="flex flex-col gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      {user.email}
+                    </span>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={handleSignOut}
+                      className="gap-2 w-fit"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sign Out
+                    </Button>
+                  </div>
+                ) : (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setShowAuthDialog(true)}
+                    className="gap-2 w-fit"
+                  >
+                    <User className="h-4 w-4" />
+                    Sign In
+                  </Button>
+                )}
+                
                 <Button 
                   variant="download" 
                   size="sm" 
@@ -115,6 +194,11 @@ const Header = () => {
           </div>
         )}
       </nav>
+      
+      <AuthDialog 
+        open={showAuthDialog} 
+        onOpenChange={setShowAuthDialog} 
+      />
     </header>
   );
 };
