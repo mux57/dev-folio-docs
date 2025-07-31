@@ -76,15 +76,15 @@ const BlogList = () => {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      {new Date(post.date).toLocaleDateString('en-US', { 
+                      {new Date(post.created_at).toLocaleDateString('en-US', { 
                         year: 'numeric', 
                         month: 'long', 
                         day: 'numeric' 
                       })}
                     </div>
                     <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {post.readTime}
+                      <Eye className="h-4 w-4" />
+                      {post.read_count} reads
                     </div>
                   </div>
                   <CardTitle className="text-foreground group-hover:text-primary transition-colors text-xl mb-3">
