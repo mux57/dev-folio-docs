@@ -8,65 +8,65 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Default theme - Professional Dark Portfolio */
-    --background: 220 13% 8%;
+    /* Default theme - Ocean Blue */
+    --background: 210 25% 8%;
     --foreground: 210 40% 98%;
 
-    --card: 220 13% 10%;
+    --card: 210 25% 10%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 220 13% 10%;
+    --popover: 210 25% 10%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 247 92% 68%;
-    --primary-foreground: 220 13% 8%;
-    --primary-glow: 247 92% 78%;
+    --primary: 200 85% 60%;
+    --primary-foreground: 210 25% 8%;
+    --primary-glow: 200 85% 70%;
 
-    --secondary: 217 19% 15%;
+    --secondary: 210 30% 15%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217 19% 15%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 210 30% 15%;
+    --muted-foreground: 210 20% 65%;
 
-    --accent: 262 83% 58%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 180 65% 55%;
+    --accent-foreground: 210 25% 8%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217 19% 15%;
-    --input: 217 19% 15%;
-    --ring: 247 92% 68%;
+    --border: 210 30% 15%;
+    --input: 210 30% 15%;
+    --ring: 200 85% 60%;
 
     --radius: 0.75rem;
 
     /* Custom portfolio colors */
-    --hero-bg: 220 13% 6%;
-    --hero-accent: 247 92% 68%;
-    --tech-bg: 217 19% 12%;
-    --project-bg: 220 13% 9%;
+    --hero-bg: 210 25% 6%;
+    --hero-accent: 200 85% 60%;
+    --tech-bg: 210 30% 12%;
+    --project-bg: 210 25% 9%;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(247 92% 68%), hsl(262 83% 58%));
-    --gradient-hero: linear-gradient(135deg, hsl(220 13% 8%) 0%, hsl(217 19% 12%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(220 13% 10%) 0%, hsl(217 19% 15%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(200 85% 60%), hsl(180 65% 55%));
+    --gradient-hero: linear-gradient(135deg, hsl(210 25% 8%) 0%, hsl(210 30% 12%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(210 25% 10%) 0%, hsl(210 30% 15%) 100%);
 
     /* Shadows */
-    --shadow-lg: 0 25px 50px -12px hsl(220 13% 4% / 0.5);
-    --shadow-glow: 0 0 40px hsl(247 92% 68% / 0.15);
+    --shadow-lg: 0 25px 50px -12px hsl(210 25% 4% / 0.5);
+    --shadow-glow: 0 0 40px hsl(200 85% 60% / 0.15);
 
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-spring: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 
-    --sidebar-background: 220 13% 10%;
+    --sidebar-background: 210 25% 10%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 247 92% 68%;
-    --sidebar-primary-foreground: 220 13% 8%;
-    --sidebar-accent: 217 19% 15%;
+    --sidebar-primary: 200 85% 60%;
+    --sidebar-primary-foreground: 210 25% 8%;
+    --sidebar-accent: 210 30% 15%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 19% 15%;
-    --sidebar-ring: 247 92% 68%;
+    --sidebar-border: 210 30% 15%;
+    --sidebar-ring: 200 85% 60%;
   }
 
   /* Ocean Blue Theme */
