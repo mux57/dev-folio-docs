@@ -85,9 +85,13 @@ const Header = () => {
     >
       <nav className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          <button 
-            onClick={() => navigate('/')}
-            className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent hover:opacity-80 transition-opacity"
+          <button
+            onClick={() => {
+              console.log('Portfolio logo clicked - navigating to home');
+              navigate('/');
+            }}
+            className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent hover:opacity-80 hover:scale-105 transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md px-2 py-1"
+            aria-label="Go to home page"
           >
             Portfolio
           </button>

@@ -69,6 +69,59 @@ All colors MUST be HSL.
     --sidebar-ring: 200 85% 60%;
   }
 
+  /* Default Theme - Cosmic Purple */
+  [data-theme="default"] {
+    --background: 224 71% 4%;
+    --foreground: 210 40% 98%;
+
+    --card: 224 71% 6%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 224 71% 6%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 247 92% 68%;
+    --primary-foreground: 224 71% 4%;
+    --primary-glow: 247 92% 78%;
+
+    --secondary: 262 83% 15%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 262 83% 15%;
+    --muted-foreground: 215.4 16.3% 65%;
+
+    --accent: 262 83% 58%;
+    --accent-foreground: 224 71% 4%;
+
+    --border: 262 83% 15%;
+    --input: 262 83% 15%;
+    --ring: 247 92% 68%;
+
+    /* Custom colors */
+    --hero-bg: 224 71% 2%;
+    --hero-accent: 247 92% 68%;
+    --tech-bg: 262 83% 12%;
+    --project-bg: 224 71% 5%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(247 92% 68%), hsl(262 83% 58%));
+    --gradient-hero: linear-gradient(135deg, hsl(224 71% 4%) 0%, hsl(262 83% 12%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(224 71% 6%) 0%, hsl(262 83% 15%) 100%);
+
+    /* Shadows */
+    --shadow-lg: 0 25px 50px -12px hsl(224 71% 2% / 0.5);
+    --shadow-glow: 0 0 40px hsl(247 92% 68% / 0.15);
+
+    --sidebar-background: 224 71% 6%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 247 92% 68%;
+    --sidebar-primary-foreground: 224 71% 4%;
+    --sidebar-accent: 262 83% 15%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 262 83% 15%;
+    --sidebar-ring: 247 92% 68%;
+  }
+
   /* Ocean Blue Theme */
   [data-theme="ocean"] {
     --background: 210 25% 8%;

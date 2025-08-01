@@ -5,6 +5,7 @@ import TechStack from "@/components/TechStack";
 import Projects from "@/components/Projects";
 import Blog from "@/components/Blog";
 import Contact from "@/components/Contact";
+import DatabaseToggle from "@/components/DatabaseToggle";
 
 const Index = () => {
   useEffect(() => {
@@ -62,6 +63,7 @@ const Index = () => {
       <Projects />
       <Blog />
       <Contact />
+      <DatabaseToggle />
     </div>
   );
 };

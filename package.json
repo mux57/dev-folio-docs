@@ -8,7 +8,10 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "sqlite:install": "cd server && npm install",
+    "sqlite:server": "cd server && npm run dev",
+    "dev:full": "concurrently \"npm run sqlite:server\" \"npm run dev\""
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

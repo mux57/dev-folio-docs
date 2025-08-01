@@ -59,27 +59,41 @@ export const themes = [
 ];
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setThemeState] = useState<Theme>('ocean');
+  const [theme, setThemeState] = useState<Theme>('default');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadThemeFromSupabase();
+    loadThemeFromDatabase();
   }, []);
 
-  const loadThemeFromSupabase = async () => {
+  const loadThemeFromDatabase = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        // User is logged in, fetch theme from Supabase
+      // Check if we're using local development
+      const isLocalDev = window.location.hostname === 'localhost' ||
+                        window.location.hostname === '127.0.0.1' ||
+                        localStorage.getItem('use_local_db') === 'true';
+
+      let userId = null;
+
+      if (isLocalDev) {
+        // For local development, use a mock user ID
+        userId = 'local-user-1';
+      } else {
+        // For production, get real user session
+        const { data: { session } } = await supabase.auth.getSession();
+        userId = session?.user?.id;
+      }
+
+      if (userId) {
+        // Fetch theme from database (Supabase or SQLite)
         const { data, error } = await supabase
           .from('user_preferences')
           .select('theme')
-          .eq('user_id', session.user.id)
+          .eq('user_id', userId)
           .maybeSingle();
 
         if (error) {
-          console.error('Error loading theme from Supabase:', error);
+          console.error('Error loading theme from database:', error);
           // Fall back to localStorage
           const savedTheme = localStorage.getItem('portfolio-theme') as Theme;
           if (savedTheme && themes.some(t => t.value === savedTheme)) {
@@ -87,16 +101,23 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           }
         } else if (data?.theme) {
           setThemeState(data.theme as Theme);
+          console.log(`✅ Theme loaded from database: ${data.theme}`);
+        } else {
+          // No theme found in database, use localStorage or default
+          const savedTheme = localStorage.getItem('portfolio-theme') as Theme;
+          if (savedTheme && themes.some(t => t.value === savedTheme)) {
+            setThemeState(savedTheme);
+          }
         }
       } else {
-        // User not logged in, use localStorage
+        // No user, use localStorage
         const savedTheme = localStorage.getItem('portfolio-theme') as Theme;
         if (savedTheme && themes.some(t => t.value === savedTheme)) {
           setThemeState(savedTheme);
         }
       }
     } catch (error) {
-      console.error('Error in loadThemeFromSupabase:', error);
+      console.error('Error in loadThemeFromDatabase:', error);
       // Fall back to localStorage
       const savedTheme = localStorage.getItem('portfolio-theme') as Theme;
       if (savedTheme && themes.some(t => t.value === savedTheme)) {
@@ -116,23 +137,40 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const setTheme = async (newTheme: Theme) => {
     setThemeState(newTheme);
-    
+
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        // User is logged in, save to Supabase
+      // Check if we're using local development
+      const isLocalDev = window.location.hostname === 'localhost' ||
+                        window.location.hostname === '127.0.0.1' ||
+                        localStorage.getItem('use_local_db') === 'true';
+
+      let userId = null;
+
+      if (isLocalDev) {
+        // For local development, use a mock user ID
+        userId = 'local-user-1';
+      } else {
+        // For production, get real user session
+        const { data: { session } } = await supabase.auth.getSession();
+        userId = session?.user?.id;
+      }
+
+      if (userId) {
+        // Save theme to database (Supabase or SQLite)
         const { error } = await supabase
           .from('user_preferences')
-          .upsert({ 
-            user_id: session.user.id, 
-            theme: newTheme 
+          .upsert({
+            user_id: userId,
+            theme: newTheme
           });
 
         if (error) {
-          console.error('Error saving theme to Supabase:', error);
+          console.error('Error saving theme to database:', error);
+        } else {
+          console.log(`✅ Theme saved to database: ${newTheme}`);
         }
       }
+
       // Always save to localStorage as backup
       localStorage.setItem('portfolio-theme', newTheme);
     } catch (error) {
