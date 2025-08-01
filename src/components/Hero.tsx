@@ -42,7 +42,7 @@ const Hero = () => {
             <Button
               variant="download"
               size="xl"
-              onClick={downloadResume}
+              onClick={() => downloadResume()}
               disabled={isLoading}
               className="group"
             >

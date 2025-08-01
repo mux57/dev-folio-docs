@@ -6,6 +6,7 @@ import Projects from "@/components/Projects";
 import Blog from "@/components/Blog";
 import Contact from "@/components/Contact";
 import DatabaseToggle from "@/components/DatabaseToggle";
+import DatabaseDebug from "@/components/DatabaseDebug";
 
 const Index = () => {
   useEffect(() => {
@@ -64,6 +65,7 @@ const Index = () => {
       <Blog />
       <Contact />
       <DatabaseToggle />
+      <DatabaseDebug />
     </div>
   );
 };
