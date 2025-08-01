@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export type Theme = 'default' | 'ocean' | 'sunset' | 'light';
+export type Theme = 'default' | 'ocean' | 'sunset' | 'light' | 'forest' | 'sepia';
 
 interface ThemeContextType {
   theme: Theme;
@@ -54,6 +54,24 @@ export const themes = [
     colors: {
       primary: 'hsl(247 92% 58%)',
       secondary: 'hsl(262 83% 48%)',
+    },
+  },
+  {
+    value: 'forest' as Theme,
+    label: 'Forest Green',
+    description: 'Soothing forest theme with calming green tones',
+    colors: {
+      primary: 'hsl(142 76% 36%)',
+      secondary: 'hsl(158 64% 52%)',
+    },
+  },
+  {
+    value: 'sepia' as Theme,
+    label: 'Warm Sepia',
+    description: 'Reading-friendly warm sepia theme for comfortable viewing',
+    colors: {
+      primary: 'hsl(30 50% 45%)',
+      secondary: 'hsl(45 65% 55%)',
     },
   },
 ];
