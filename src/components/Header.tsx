@@ -5,8 +5,11 @@ import ThemeSwitcher from "@/components/ThemeSwitcher";
 import AuthDialog from "@/components/AuthDialog";
 import { supabase } from "@/integrations/supabase/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Header = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
@@ -44,9 +47,23 @@ const Header = () => {
     await supabase.auth.signOut();
   };
 
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    element?.scrollIntoView({ behavior: 'smooth' });
+  const handleNavigation = (item: { label: string; href: string }) => {
+    // If we're not on the home page and clicking Home, or clicking any section link while not on home
+    if (location.pathname !== '/' && (item.label === 'Home' || item.href.startsWith('#'))) {
+      // Navigate to home page and then scroll to section
+      navigate('/');
+      // Use setTimeout to ensure page loads before scrolling
+      setTimeout(() => {
+        if (item.href.startsWith('#')) {
+          const element = document.getElementById(item.href.substring(1));
+          element?.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    } else if (item.href.startsWith('#')) {
+      // We're on home page, just scroll to section
+      const element = document.getElementById(item.href.substring(1));
+      element?.scrollIntoView({ behavior: 'smooth' });
+    }
     setIsMenuOpen(false);
   };
 
@@ -68,16 +85,19 @@ const Header = () => {
     >
       <nav className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+          <button 
+            onClick={() => navigate('/')}
+            className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent hover:opacity-80 transition-opacity"
+          >
             Portfolio
-          </div>
+          </button>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => (
               <button
                 key={item.label}
-                onClick={() => scrollToSection(item.href.substring(1))}
+                onClick={() => handleNavigation(item)}
                 className="text-foreground hover:text-primary transition-colors duration-300 font-medium"
               >
                 {item.label}
@@ -144,7 +164,7 @@ const Header = () => {
               {navItems.map((item) => (
                 <button
                   key={item.label}
-                  onClick={() => scrollToSection(item.href.substring(1))}
+                  onClick={() => handleNavigation(item)}
                   className="text-left text-foreground hover:text-primary transition-colors duration-300 font-medium py-2"
                 >
                   {item.label}
