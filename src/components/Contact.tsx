@@ -5,14 +5,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mail, Github, Linkedin, Phone, Send, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import emailjs from '@emailjs/browser';
 
 const Contact = () => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    subject: "",
+    company: "",
     message: ""
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -21,26 +25,69 @@ const Contact = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
       toast({
         title: "Missing Information",
-        description: "Please fill in all fields.",
+        description: "Please fill in all required fields (Name, Email, Message).",
         variant: "destructive"
       });
       return;
     }
 
-    // In a real app, this would send the message
-    toast({
-      title: "Message Sent!",
-      description: "Thank you for your message. I'll get back to you soon!",
-    });
+    setIsSubmitting(true);
 
-    // Reset form
-    setFormData({ name: "", email: "", message: "" });
+    try {
+      // EmailJS configuration
+      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+      const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+      if (!serviceId || !templateId || !publicKey) {
+        throw new Error("EmailJS configuration missing. Please check your environment variables.");
+      }
+
+      // Prepare template parameters (simplified for debugging)
+      const templateParams = {
+        from_name: formData.name,
+        from_email: formData.email,
+        message: formData.message,
+        subject: formData.subject || "Portfolio Contact",
+        company: formData.company || "Not specified",
+        reply_to: formData.email,
+      };
+
+      // Send email using EmailJS
+      await emailjs.send(serviceId, templateId, templateParams, publicKey);
+
+      toast({
+        title: "Message Sent Successfully! 🎉",
+        description: "Thank you for reaching out! I'll get back to you within 24-48 hours.",
+      });
+
+      // Reset form
+      setFormData({ name: "", email: "", subject: "", company: "", message: "" });
+
+    } catch (error: any) {
+      console.error("EmailJS Error Details:", {
+        error,
+        message: error?.message,
+        status: error?.status,
+        text: error?.text
+      });
+
+      const errorMessage = error?.text || error?.message || "Unknown error occurred";
+
+      toast({
+        title: "Failed to Send Message",
+        description: `Error: ${errorMessage}. Please try again or contact me directly at mukeshknit57@gmail.com`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const contactInfo = [
@@ -141,7 +188,7 @@ const Contact = () => {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label htmlFor="name" className="text-sm font-medium text-foreground mb-2 block">
-                    Your Name
+                    Your Name <span className="text-red-500">*</span>
                   </label>
                   <Input
                     id="name"
@@ -150,12 +197,13 @@ const Contact = () => {
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
                     className="bg-background border-border"
+                    required
                   />
                 </div>
 
                 <div>
                   <label htmlFor="email" className="text-sm font-medium text-foreground mb-2 block">
-                    Email Address
+                    Email Address <span className="text-red-500">*</span>
                   </label>
                   <Input
                     id="email"
@@ -164,12 +212,41 @@ const Contact = () => {
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     className="bg-background border-border"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="subject" className="text-sm font-medium text-foreground mb-2 block">
+                    Subject <span className="text-muted-foreground">(Optional)</span>
+                  </label>
+                  <Input
+                    id="subject"
+                    type="text"
+                    placeholder="What's this about?"
+                    value={formData.subject}
+                    onChange={(e) => handleInputChange('subject', e.target.value)}
+                    className="bg-background border-border"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="company" className="text-sm font-medium text-foreground mb-2 block">
+                    Company <span className="text-muted-foreground">(Optional)</span>
+                  </label>
+                  <Input
+                    id="company"
+                    type="text"
+                    placeholder="Your company or organization"
+                    value={formData.company}
+                    onChange={(e) => handleInputChange('company', e.target.value)}
+                    className="bg-background border-border"
                   />
                 </div>
 
                 <div>
                   <label htmlFor="message" className="text-sm font-medium text-foreground mb-2 block">
-                    Message
+                    Message <span className="text-red-500">*</span>
                   </label>
                   <Textarea
                     id="message"
@@ -180,9 +257,15 @@ const Contact = () => {
                   />
                 </div>
 
-                <Button type="submit" variant="hero" size="lg" className="w-full group">
+                <Button
+                  type="submit"
+                  variant="hero"
+                  size="lg"
+                  className="w-full group"
+                  disabled={isSubmitting}
+                >
                   <Send className="mr-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  Send Message
+                  {isSubmitting ? "Sending..." : "Send Message"}
                 </Button>
               </form>
             </CardContent>
