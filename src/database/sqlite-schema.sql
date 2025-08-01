@@ -101,3 +101,29 @@ INSERT OR IGNORE INTO profiles (id, email, full_name, avatar_url) VALUES
 -- Insert default preferences for the sample user
 INSERT OR IGNORE INTO user_preferences (user_id, theme) VALUES
 ('local-user-1', 'default');
+
+-- Create resume_links table for managing resume downloads
+CREATE TABLE IF NOT EXISTS resume_links (
+  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+  name TEXT NOT NULL,
+  description TEXT,
+  file_url TEXT NOT NULL,
+  file_type TEXT NOT NULL DEFAULT 'pdf',
+  file_size TEXT,
+  is_active BOOLEAN DEFAULT 1,
+  display_order INTEGER DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create trigger for updating timestamps on resume_links
+CREATE TRIGGER IF NOT EXISTS update_resume_links_updated_at
+AFTER UPDATE ON resume_links
+FOR EACH ROW
+BEGIN
+  UPDATE resume_links SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+END;
+
+-- Insert default resume link (Google Drive)
+INSERT OR IGNORE INTO resume_links (id, name, description, file_url, file_type, file_size, is_active, display_order) VALUES
+('resume-1', 'Software Engineer Resume', 'Latest resume with current experience and skills', 'https://drive.google.com/uc?export=download&id=1Sc1-lz6ejMOKE8fvOJitZi5mUzKgKtPC', 'pdf', '10MB', 1, 1);

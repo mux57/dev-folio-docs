@@ -1,7 +1,42 @@
-// Mock resume download functionality
-// In a real application, this would connect to your backend API
+// Simple Google Drive resume download
+// Your Google Drive file ID: 1Sc1-lz6ejMOKE8fvOJitZi5mUzKgKtPC
 
+const GOOGLE_DRIVE_FILE_ID = "1Sc1-lz6ejMOKE8fvOJitZi5mUzKgKtPC";
+const RESUME_FILENAME = "Software_Engineer_Resume.pdf";
+
+// Simple direct download from Google Drive
 export const downloadResume = () => {
+  const downloadUrl = `https://drive.google.com/uc?export=download&id=${GOOGLE_DRIVE_FILE_ID}`;
+
+  // Open Google Drive download in new tab
+  window.open(downloadUrl, '_blank');
+};
+
+// Alternative: Download with custom filename (may not work due to CORS)
+export const downloadResumeWithFilename = async () => {
+  const downloadUrl = `https://drive.google.com/uc?export=download&id=${GOOGLE_DRIVE_FILE_ID}`;
+
+  try {
+    // Try to fetch and download with custom filename
+    const response = await fetch(downloadUrl, { mode: 'no-cors' });
+    const blob = await response.blob();
+
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = RESUME_FILENAME;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  } catch (error) {
+    console.log('Fetch failed, opening direct link:', error);
+    // Fallback to direct link
+    window.open(downloadUrl, '_blank');
+  }
+};
+
+// Legacy mock function - kept for backward compatibility
+export const downloadResumeOld = () => {
   // Create a mock PDF content
   const resumeContent = `
 %PDF-1.4

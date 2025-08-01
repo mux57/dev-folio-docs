@@ -1,12 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { ArrowDown, Download, Github, Linkedin, Mail } from "lucide-react";
+import { useDownloadResume } from "@/hooks/useResumeLinks";
 
 const Hero = () => {
-  const handleDownloadResume = () => {
-    import("@/utils/resumeDownload").then(({ downloadResume }) => {
-      downloadResume();
-    });
-  };
+  const { downloadResume, isLoading } = useDownloadResume();
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -42,14 +39,15 @@ const Hero = () => {
               View My Work
               <ArrowDown className="ml-2 h-5 w-5 group-hover:translate-y-1 transition-transform" />
             </Button>
-            <Button 
-              variant="download" 
-              size="xl" 
-              onClick={handleDownloadResume}
+            <Button
+              variant="download"
+              size="xl"
+              onClick={downloadResume}
+              disabled={isLoading}
               className="group"
             >
               <Download className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-              Download Resume
+              {isLoading ? 'Loading...' : 'Download Resume'}
             </Button>
           </div>
 

@@ -87,6 +87,15 @@ class RealSQLiteClient {
               return callback({ data: null, error: error.message });
             }
           }
+          if (table === 'resume_links') {
+            try {
+              const response = await fetch(`${self.baseUrl}/resume_links`);
+              const result = await response.json();
+              return callback(result);
+            } catch (error) {
+              return callback({ data: null, error: error.message });
+            }
+          }
           return callback({ data: [], error: null });
         }
       }),

@@ -6,6 +6,7 @@ import AuthDialog from "@/components/AuthDialog";
 import { supabase } from "@/integrations/supabase/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useDownloadResume } from "@/hooks/useResumeLinks";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const { downloadResume, isLoading: isResumeLoading } = useDownloadResume();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,11 +39,7 @@ const Header = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleDownloadResume = () => {
-    import("@/utils/resumeDownload").then(({ downloadResume }) => {
-      downloadResume();
-    });
-  };
+
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -139,14 +137,15 @@ const Header = () => {
               </Button>
             )}
             
-            <Button 
-              variant="download" 
-              size="sm" 
-              onClick={handleDownloadResume}
+            <Button
+              variant="download"
+              size="sm"
+              onClick={() => downloadResume()}
+              disabled={isResumeLoading}
               className="group"
             >
               <Download className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
-              Resume
+              {isResumeLoading ? 'Loading...' : 'Resume'}
             </Button>
           </div>
 
@@ -204,14 +203,15 @@ const Header = () => {
                   </Button>
                 )}
                 
-                <Button 
-                  variant="download" 
-                  size="sm" 
-                  onClick={handleDownloadResume}
+                <Button
+                  variant="download"
+                  size="sm"
+                  onClick={() => downloadResume()}
+                  disabled={isResumeLoading}
                   className="group w-fit"
                 >
                   <Download className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
-                  Download Resume
+                  {isResumeLoading ? 'Loading...' : 'Download Resume'}
                 </Button>
               </div>
             </div>

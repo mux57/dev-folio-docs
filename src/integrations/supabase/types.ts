@@ -110,6 +110,45 @@ export type Database = {
         }
         Relationships: []
       }
+      resume_links: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          file_url: string
+          file_type: string
+          file_size: string | null
+          is_active: boolean
+          display_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          file_url: string
+          file_type?: string
+          file_size?: string | null
+          is_active?: boolean
+          display_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          file_url?: string
+          file_type?: string
+          file_size?: string | null
+          is_active?: boolean
+          display_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

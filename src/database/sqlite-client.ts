@@ -32,6 +32,19 @@ interface UserPreferences {
   updated_at: string;
 }
 
+interface ResumeLink {
+  id: string;
+  name: string;
+  description: string | null;
+  file_url: string;
+  file_type: string;
+  file_size: string | null;
+  is_active: boolean;
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
 class SQLiteClient {
   private db: any = null;
   private isInitialized = false;
@@ -135,6 +148,25 @@ class SQLiteClient {
         }
       ];
       localStorage.setItem('sqlite_user_preferences', JSON.stringify(defaultPreferences));
+    }
+
+    // Initialize resume links for local development
+    if (!localStorage.getItem('sqlite_resume_links')) {
+      const defaultResumeLinks = [
+        {
+          id: 'resume-1',
+          name: 'Software Engineer Resume',
+          description: 'Latest resume with current experience and skills',
+          file_url: 'https://drive.google.com/uc?export=download&id=1Sc1-lz6ejMOKE8fvOJitZi5mUzKgKtPC',
+          file_type: 'pdf',
+          file_size: '10MB',
+          is_active: true,
+          display_order: 1,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      ];
+      localStorage.setItem('sqlite_resume_links', JSON.stringify(defaultResumeLinks));
     }
 
     this.isInitialized = true;
@@ -404,6 +436,89 @@ class SQLiteClient {
     }
   }
 
+  // Resume links methods
+  async getActiveResumeLinks(): Promise<{ data: any[] | null; error: any }> {
+    if (!this.isInitialized) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    try {
+      if (this.useLocalStorage) {
+        const links = JSON.parse(localStorage.getItem('sqlite_resume_links') || '[]');
+        const activeLinks = links.filter((link: any) => link.is_active);
+        return { data: activeLinks, error: null };
+      }
+
+      return new Promise((resolve) => {
+        this.db.transaction((tx: any) => {
+          tx.executeSql(
+            'SELECT * FROM resume_links WHERE is_active = 1 ORDER BY display_order ASC',
+            [],
+            (_tx: any, result: any) => {
+              const links: any[] = [];
+              for (let i = 0; i < result.rows.length; i++) {
+                const row = result.rows.item(i);
+                links.push({
+                  ...row,
+                  is_active: Boolean(row.is_active)
+                });
+              }
+              resolve({ data: links, error: null });
+            },
+            (_tx: any, error: any) => resolve({ data: null, error })
+          );
+        });
+      });
+    } catch (error) {
+      return { data: null, error };
+    }
+  }
+
+  async updateResumeLink(id: string, updates: any): Promise<{ data: any | null; error: any }> {
+    if (!this.isInitialized) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    try {
+      if (this.useLocalStorage) {
+        const links = JSON.parse(localStorage.getItem('sqlite_resume_links') || '[]');
+        const linkIndex = links.findIndex((link: any) => link.id === id);
+
+        if (linkIndex !== -1) {
+          links[linkIndex] = {
+            ...links[linkIndex],
+            ...updates,
+            updated_at: new Date().toISOString()
+          };
+          localStorage.setItem('sqlite_resume_links', JSON.stringify(links));
+          return { data: links[linkIndex], error: null };
+        }
+        return { data: null, error: 'Resume link not found' };
+      }
+
+      return new Promise((resolve) => {
+        this.db.transaction((tx: any) => {
+          const fields = Object.keys(updates).filter(key => key !== 'id');
+          const setClause = fields.map(field => `${field} = ?`).join(', ');
+          const values = fields.map(field =>
+            field === 'is_active' ? (updates[field] ? 1 : 0) : updates[field]
+          );
+
+          tx.executeSql(`
+            UPDATE resume_links
+            SET ${setClause}, updated_at = ?
+            WHERE id = ?
+          `, [...values, new Date().toISOString(), id],
+          () => resolve({ data: { id, ...updates }, error: null }),
+          (_tx: any, error: any) => resolve({ data: null, error })
+          );
+        });
+      });
+    } catch (error) {
+      return { data: null, error };
+    }
+  }
+
   // Supabase-like table interface
   from(table: string) {
     const self = this;
@@ -417,6 +532,9 @@ class SQLiteClient {
             }
             if (table === 'user_preferences' && column === 'user_id') {
               return await self.getUserPreferences(value);
+            }
+            if (table === 'resume_links' && column === 'is_active') {
+              return await self.getActiveResumeLinks();
             }
             return { data: null, error: null };
           }
@@ -439,6 +557,9 @@ class SQLiteClient {
         then: async (callback: any) => {
           if (table === 'blog_posts') {
             return callback(await self.getBlogPosts());
+          }
+          if (table === 'resume_links') {
+            return callback(await self.getActiveResumeLinks());
           }
           return callback({ data: [], error: null });
         }

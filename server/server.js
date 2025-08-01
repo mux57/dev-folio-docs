@@ -60,6 +60,22 @@ const initDB = () => {
     )
   `);
 
+  // Create resume_links table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS resume_links (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      name TEXT NOT NULL,
+      description TEXT,
+      file_url TEXT NOT NULL,
+      file_type TEXT NOT NULL DEFAULT 'pdf',
+      file_size TEXT,
+      is_active INTEGER DEFAULT 1,
+      display_order INTEGER DEFAULT 1,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `);
+
   // Insert sample data if empty
   const postCount = db.prepare('SELECT COUNT(*) as count FROM blog_posts').get();
   if (postCount.count === 0) {
@@ -115,6 +131,36 @@ const initDB = () => {
     });
 
     console.log('✅ Sample data inserted into SQLite database');
+  }
+
+  // Insert sample user preferences if empty
+  const prefsCount = db.prepare('SELECT COUNT(*) as count FROM user_preferences').get();
+  if (prefsCount.count === 0) {
+    const insertPrefs = db.prepare(`
+      INSERT INTO user_preferences (user_id, theme, created_at, updated_at)
+      VALUES (?, ?, ?, ?)
+    `);
+    insertPrefs.run('local-user-1', 'default', new Date().toISOString(), new Date().toISOString());
+  }
+
+  // Insert sample resume links if empty
+  const resumeCount = db.prepare('SELECT COUNT(*) as count FROM resume_links').get();
+  if (resumeCount.count === 0) {
+    const insertResume = db.prepare(`
+      INSERT INTO resume_links (name, description, file_url, file_type, file_size, is_active, display_order, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    insertResume.run(
+      'Software Engineer Resume',
+      'Latest resume with current experience and skills',
+      'https://drive.google.com/uc?export=download&id=1Sc1-lz6ejMOKE8fvOJitZi5mUzKgKtPC',
+      'pdf',
+      '10MB',
+      1,
+      1,
+      new Date().toISOString(),
+      new Date().toISOString()
+    );
   }
 };
 
@@ -262,6 +308,47 @@ app.post('/api/user_preferences', (req, res) => {
     }
 
     res.json({ data: { user_id, theme }, error: null });
+  } catch (error) {
+    res.status(500).json({ data: null, error: error.message });
+  }
+});
+
+// Get active resume links
+app.get('/api/resume_links', (req, res) => {
+  try {
+    const links = db.prepare('SELECT * FROM resume_links WHERE is_active = 1 ORDER BY display_order ASC').all();
+    const formattedLinks = links.map(link => ({
+      ...link,
+      is_active: Boolean(link.is_active)
+    }));
+    res.json({ data: formattedLinks, error: null });
+  } catch (error) {
+    res.status(500).json({ data: null, error: error.message });
+  }
+});
+
+// Update resume link
+app.put('/api/resume_links/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    // Build dynamic update query
+    const fields = Object.keys(updates).filter(key => key !== 'id');
+    const setClause = fields.map(field => `${field} = ?`).join(', ');
+    const values = fields.map(field =>
+      field === 'is_active' ? (updates[field] ? 1 : 0) : updates[field]
+    );
+
+    const update = db.prepare(`
+      UPDATE resume_links
+      SET ${setClause}, updated_at = ?
+      WHERE id = ?
+    `);
+
+    update.run(...values, new Date().toISOString(), id);
+
+    res.json({ data: { id, ...updates }, error: null });
   } catch (error) {
     res.status(500).json({ data: null, error: error.message });
   }
