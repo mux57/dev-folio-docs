@@ -11,11 +11,11 @@ import DatabaseDebug from "@/components/DatabaseDebug";
 const Index = () => {
   useEffect(() => {
     // SEO optimization
-    document.title = "Software Engineer Portfolio | Full Stack Developer";
+    document.title = "Staff Engineer @Tekion.Corp | Portfolio";
     
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
-      metaDescription.setAttribute('content', 'Portfolio of a passionate full-stack software engineer specializing in React, Node.js, and modern web technologies. View projects, blog posts, and get in touch.');
+      metaDescription.setAttribute('content', 'Portfolio of a Staff Engineer at Tekion.Corp passionate about backend development, distributed systems, architecture, and scalability. Specializing in Java, Spring Boot, and high-performance solutions.');
     }
 
     const metaKeywords = document.createElement('meta');
@@ -27,19 +27,19 @@ const Index = () => {
     const structuredData = {
       "@context": "https://schema.org",
       "@type": "Person",
-      "name": "Software Engineer",
-      "jobTitle": "Full Stack Developer",
-      "description": "Passionate full-stack software engineer specializing in React, Node.js, and modern web technologies",
+      "name": "Staff Engineer",
+      "jobTitle": "Backend Staff Engineer @Tekion.Corp",
+      "description": "Backend Staff Engineer at Tekion.Corp passionate about distributed systems, architecture, scalability, Java and Spring Boot",
       "url": window.location.origin,
       "sameAs": [
         "https://github.com/username",
         "https://linkedin.com/in/username"
       ],
-      "knowsAbout": ["React", "Node.js", "TypeScript", "JavaScript", "Python", "Web Development"],
+      "knowsAbout": ["Java", "Spring Boot", "Distributed Systems", "Backend Architecture", "Scalability", "System Design"],
       "alumniOf": "Computer Science",
       "worksFor": {
         "@type": "Organization",
-        "name": "Freelance"
+        "name": "Tekion.Corp"
       }
     };
 
