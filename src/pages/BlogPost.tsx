@@ -1,10 +1,11 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, Clock, Download, Eye } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Download, Eye, Edit } from "lucide-react";
 import Header from "@/components/Header";
 import { ShareMenu } from "@/components/ShareMenu";
 import { useBlogPost } from "@/hooks/useBlogPost";
+import { useUserPermissions } from "@/hooks/useUserPermissions";
 import { generateBlogPDF } from "@/utils/blogPdf";
 import { useToast } from "@/hooks/use-toast";
 
@@ -12,6 +13,7 @@ const BlogPost = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isAdmin, loading: permissionsLoading } = useUserPermissions();
 
   // Convert old numeric IDs to slugs for compatibility
   const getSlugFromId = (id: string) => {
@@ -97,6 +99,10 @@ const BlogPost = () => {
     }
   };
 
+  const handleEditPost = () => {
+    navigate(`/blog/edit/${slug}`);
+  };
+
   const shareData = {
     title: post.title,
     text: post.excerpt || `Read this insightful blog post about ${post.title}`,
@@ -156,6 +162,17 @@ const BlogPost = () => {
                 ))}
               </div>
               <div className="flex gap-2">
+                {isAdmin && (
+                  <Button 
+                    onClick={handleEditPost} 
+                    variant="outline" 
+                    size="sm" 
+                    className="group"
+                  >
+                    <Edit className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
+                    Edit
+                  </Button>
+                )}
                 <Button 
                   onClick={handleDownloadPDF} 
                   variant="outline" 
@@ -192,6 +209,12 @@ const BlogPost = () => {
                 Thanks for reading! Share your thoughts and download as PDF.
               </p>
               <div className="flex gap-3">
+                {isAdmin && (
+                  <Button onClick={handleEditPost} variant="outline" className="group">
+                    <Edit className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
+                    Edit Post
+                  </Button>
+                )}
                 <Button onClick={handleDownloadPDF} variant="outline" className="group">
                   <Download className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
                   Download PDF

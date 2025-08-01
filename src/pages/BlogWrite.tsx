@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,11 +7,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Save, Eye, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useBlogPost } from "@/hooks/useBlogPost";
+import { useUserPermissions } from "@/hooks/useUserPermissions";
 import Header from "@/components/Header";
 
 const BlogWrite = () => {
   const navigate = useNavigate();
+  const { slug } = useParams();
   const { toast } = useToast();
+  const { isAdmin, loading: permissionsLoading } = useUserPermissions();
+  const { post, loading: postLoading } = useBlogPost(slug || '');
+  
+  const isEditMode = Boolean(slug);
   
   const [formData, setFormData] = useState({
     title: "",
@@ -22,6 +29,31 @@ const BlogWrite = () => {
   });
 
   const [isPreview, setIsPreview] = useState(false);
+
+  // Load existing post data for editing
+  useEffect(() => {
+    if (isEditMode && post) {
+      setFormData({
+        title: post.title,
+        excerpt: post.excerpt || "",
+        content: post.content,
+        tags: post.tags,
+        currentTag: ""
+      });
+    }
+  }, [isEditMode, post]);
+
+  // Redirect if not admin
+  useEffect(() => {
+    if (!permissionsLoading && !isAdmin) {
+      toast({
+        title: "Access Denied",
+        description: "You don't have permission to access this page.",
+        variant: "destructive"
+      });
+      navigate('/blog');
+    }
+  }, [isAdmin, permissionsLoading, navigate, toast]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -59,13 +91,19 @@ const BlogWrite = () => {
 
     // In a real app, this would save to a database
     toast({
-      title: "Post Saved!",
-      description: "Your blog post has been saved successfully.",
+      title: isEditMode ? "Post Updated!" : "Post Saved!",
+      description: isEditMode 
+        ? "Your blog post has been updated successfully." 
+        : "Your blog post has been saved successfully.",
     });
     
-    // Simulate navigation to the new post
+    // Simulate navigation to the post
     setTimeout(() => {
-      navigate('/blog');
+      if (isEditMode && slug) {
+        navigate(`/blog/${slug}`);
+      } else {
+        navigate('/blog');
+      }
     }, 1000);
   };
 
@@ -75,6 +113,29 @@ const BlogWrite = () => {
       handleAddTag();
     }
   };
+
+  // Show loading while checking permissions or loading post data
+  if (permissionsLoading || (isEditMode && postLoading)) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-24 pb-16">
+          <div className="container mx-auto px-6 max-w-6xl">
+            <div className="animate-pulse">
+              <div className="h-8 bg-muted rounded mb-8 w-32"></div>
+              <div className="h-12 bg-muted rounded mb-6"></div>
+              <div className="h-96 bg-muted rounded"></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Don't render if not admin (will be redirected)
+  if (!isAdmin) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -108,7 +169,7 @@ const BlogWrite = () => {
                 className="group"
               >
                 <Save className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
-                Save Post
+                {isEditMode ? 'Update Post' : 'Save Post'}
               </Button>
             </div>
           </div>
@@ -119,10 +180,13 @@ const BlogWrite = () => {
               <Card className="bg-gradient-card border-border">
                 <CardHeader>
                   <CardTitle className="text-2xl">
-                    {isPreview ? 'Preview' : 'Write New Post'}
+                    {isPreview ? 'Preview' : (isEditMode ? 'Edit Post' : 'Write New Post')}
                   </CardTitle>
                   <CardDescription>
-                    {isPreview ? 'Preview how your post will look' : 'Create a new blog post'}
+                    {isPreview 
+                      ? 'Preview how your post will look' 
+                      : (isEditMode ? 'Edit your existing blog post' : 'Create a new blog post')
+                    }
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
