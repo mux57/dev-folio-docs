@@ -52,13 +52,28 @@ const Hero = () => {
           </div>
 
           <div className="flex justify-center space-x-6">
-            <Button variant="ghost" size="icon" className="hover:text-primary">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:text-primary"
+              onClick={() => window.open('https://github.com/mux57', '_blank')}
+            >
               <Github className="h-6 w-6" />
             </Button>
-            <Button variant="ghost" size="icon" className="hover:text-primary">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:text-primary"
+              onClick={() => window.open('https://www.linkedin.com/in/mukeshknit57/', '_blank')}
+            >
               <Linkedin className="h-6 w-6" />
             </Button>
-            <Button variant="ghost" size="icon" className="hover:text-primary">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:text-primary"
+              onClick={() => window.open('mailto:mukeshknit57@gmail.com', '_blank')}
+            >
               <Mail className="h-6 w-6" />
             </Button>
           </div>

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mail, Github, Linkedin, MapPin, Send } from "lucide-react";
+import { Mail, Github, Linkedin, Phone, Send, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Contact = () => {
@@ -47,25 +47,31 @@ const Contact = () => {
     {
       icon: Mail,
       label: "Email",
-      value: "contact@example.com",
-      href: "mailto:contact@example.com"
+      value: "mukeshknit57@gmail.com",
+      href: "mailto:mukeshknit57@gmail.com"
+    },
+    {
+      icon: Phone,
+      label: "Phone",
+      value: "+91 7411729430",
+      href: "tel:+917411729430"
     },
     {
       icon: Github,
       label: "GitHub",
-      value: "github.com/username",
-      href: "https://github.com/username"
+      value: "github.com/mux57",
+      href: "https://github.com/mux57"
     },
     {
       icon: Linkedin,
       label: "LinkedIn",
-      value: "linkedin.com/in/username",
-      href: "https://linkedin.com/in/username"
+      value: "linkedin.com/in/mukeshknit57",
+      href: "https://www.linkedin.com/in/mukeshknit57/"
     },
     {
       icon: MapPin,
       label: "Location",
-      value: "San Francisco, CA",
+      value: "Bengaluru, India",
       href: null
     }
   ];
