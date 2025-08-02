@@ -8,6 +8,7 @@ import { useBlogPost } from "@/hooks/useBlogPost";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
 import { generateBlogPDF } from "@/utils/blogPdf";
 import { useToast } from "@/hooks/use-toast";
+import { useSEO, useStructuredData } from "@/hooks/useSEO";
 
 const BlogPost = () => {
   const { id } = useParams();
@@ -26,6 +27,69 @@ const BlogPost = () => {
 
   const slug = getSlugFromId(id || '');
   const { post, loading, error } = useBlogPost(slug);
+
+  // SEO optimization for blog post
+  const stripHtml = (html: string) => {
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    return temp.textContent || temp.innerText || '';
+  };
+
+  // Apply SEO when post is available
+  if (post && !loading && !error) {
+    const description = post.excerpt || stripHtml(post.content).substring(0, 160) + '...';
+    const publishedTime = new Date(post.created_at).toISOString();
+    const modifiedTime = new Date(post.updated_at).toISOString();
+
+    useSEO({
+      title: `${post.title} | Mukesh Kumar Gupta Blog`,
+      description,
+      keywords: [...(post.tags || []), "Mukesh Kumar Gupta", "Blog", "Software Engineering"],
+      type: "article",
+      author: post.author || "Mukesh Kumar Gupta",
+      publishedTime,
+      modifiedTime,
+      tags: post.tags || [],
+      url: window.location.href,
+      canonical: window.location.href
+    });
+
+    // Structured data for blog post
+    useStructuredData({
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": post.title,
+      "description": description,
+      "image": "https://mukeshkumargupta.dev/og-image.jpg",
+      "author": {
+        "@type": "Person",
+        "name": post.author || "Mukesh Kumar Gupta",
+        "url": "https://mukeshkumargupta.dev/"
+      },
+      "publisher": {
+        "@type": "Person",
+        "name": "Mukesh Kumar Gupta",
+        "url": "https://mukeshkumargupta.dev/"
+      },
+      "datePublished": publishedTime,
+      "dateModified": modifiedTime,
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": window.location.href
+      },
+      "keywords": (post.tags || []).join(", "),
+      "articleSection": "Technology",
+      "inLanguage": "en-US"
+    });
+  } else {
+    // Default SEO for blog post page when loading or error
+    useSEO({
+      title: "Blog Post | Mukesh Kumar Gupta",
+      description: "Read insightful blog posts about software engineering, technology, and development by Mukesh Kumar Gupta.",
+      keywords: ["Mukesh Kumar Gupta", "Blog", "Software Engineering", "Technology"],
+      type: "website"
+    });
+  }
 
   if (loading) {
     return (

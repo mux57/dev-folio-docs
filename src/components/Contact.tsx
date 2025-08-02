@@ -6,9 +6,45 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mail, Github, Linkedin, Phone, Send, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import emailjs from '@emailjs/browser';
+import ProtectedContact from "@/components/ProtectedContact";
+import ContactProtectionWrapper from "@/components/ContactProtectionWrapper";
+import { useEffect } from "react";
 
 const Contact = () => {
   const { toast } = useToast();
+
+  // Add contact protection meta tags when component mounts
+  useEffect(() => {
+    // Add specific meta tags to prevent contact section crawling
+    const addContactProtectionMeta = () => {
+      // Remove existing contact protection meta if any
+      const existingMeta = document.querySelector('meta[name="contact-section"]');
+      if (existingMeta) existingMeta.remove();
+
+      // Add new protection meta
+      const meta = document.createElement('meta');
+      meta.name = 'contact-section';
+      meta.content = 'noindex, nofollow, noarchive, nosnippet, noimageindex';
+      document.head.appendChild(meta);
+
+      // Add robots meta specifically for this section
+      const robotsMeta = document.createElement('meta');
+      robotsMeta.name = 'robots';
+      robotsMeta.content = 'noindex, nofollow, noarchive, nosnippet, noimageindex';
+      robotsMeta.setAttribute('data-contact-protection', 'true');
+      document.head.appendChild(robotsMeta);
+    };
+
+    addContactProtectionMeta();
+
+    return () => {
+      // Cleanup on unmount
+      const contactMeta = document.querySelector('meta[name="contact-section"]');
+      const robotsMeta = document.querySelector('meta[data-contact-protection="true"]');
+      if (contactMeta) contactMeta.remove();
+      if (robotsMeta) robotsMeta.remove();
+    };
+  }, []);
 
   // Optimized initial state
   const initialFormState = {
@@ -130,14 +166,15 @@ const Contact = () => {
   ];
 
   return (
-    <section id="contact" className="py-20 bg-background">
-      <div className="container mx-auto px-6">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4 text-foreground">Get In Touch</h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Have a project in mind or want to collaborate? Let's connect and build something amazing together!
-          </p>
-        </div>
+    <ContactProtectionWrapper>
+      <section id="contact" className="py-20 bg-background">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold mb-4 text-foreground">Get In Touch</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Have a project in mind or want to collaborate? Let's connect and build something amazing together!
+            </p>
+          </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
           {/* Contact Information */}
@@ -151,26 +188,45 @@ const Contact = () => {
             </div>
 
             <div className="space-y-4">
-              {contactInfo.map((info) => (
-                <div key={info.label} className="flex items-center space-x-4 group">
-                  <div className="w-12 h-12 bg-gradient-card rounded-lg flex items-center justify-center border border-border group-hover:border-primary/50 transition-colors">
-                    <info.icon className="h-6 w-6 text-primary" />
+              {contactInfo.map((info) => {
+                // Use protected component for sensitive contact info
+                if (info.label === "Email" || info.label === "Phone") {
+                  return (
+                    <ProtectedContact
+                      key={info.label}
+                      type={info.label === "Email" ? "email" : "phone"}
+                      value={info.value}
+                      label={info.label}
+                      icon={info.icon}
+                      href={info.href}
+                      className="w-full"
+                    />
+                  );
+                }
+
+                // Regular display for non-sensitive info
+                return (
+                  <div key={info.label} className="flex items-center space-x-4 group">
+                    <div className="w-12 h-12 bg-gradient-card rounded-lg flex items-center justify-center border border-border group-hover:border-primary/50 transition-colors">
+                      <info.icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">{info.label}</p>
+                      {info.href ? (
+                        <a
+                          href={info.href}
+                          className="text-muted-foreground hover:text-primary transition-colors"
+                          rel="nofollow noopener"
+                        >
+                          {info.value}
+                        </a>
+                      ) : (
+                        <p className="text-muted-foreground">{info.value}</p>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-foreground">{info.label}</p>
-                    {info.href ? (
-                      <a 
-                        href={info.href}
-                        className="text-muted-foreground hover:text-primary transition-colors"
-                      >
-                        {info.value}
-                      </a>
-                    ) : (
-                      <p className="text-muted-foreground">{info.value}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="pt-8">
@@ -279,6 +335,7 @@ const Contact = () => {
         </div>
       </div>
     </section>
+    </ContactProtectionWrapper>
   );
 };
 
