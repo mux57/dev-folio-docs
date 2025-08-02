@@ -442,18 +442,19 @@ All colors MUST be HSL.
     transition: var(--theme-transition, background-color 0.15s ease-out, color 0.15s ease-out);
   }
 
-  /* Smooth theme transitions for all theme-dependent properties */
-  *,
-  *::before,
-  *::after {
-    transition: var(--theme-transition,
-      background-color 0.15s ease-out,
-      border-color 0.15s ease-out,
-      color 0.15s ease-out,
-      fill 0.15s ease-out,
-      stroke 0.15s ease-out,
-      box-shadow 0.15s ease-out
-    );
+  /* Smooth theme transitions for most elements */
+  body,
+  main,
+  section,
+  div:not([data-theme-switcher]):not([data-theme-dropdown]),
+  button:not([data-theme-switcher]),
+  [role="menuitem"]:not([data-theme-dropdown] [role="menuitem"]) {
+    transition: background-color 0.15s ease-out,
+                border-color 0.15s ease-out,
+                color 0.15s ease-out,
+                fill 0.15s ease-out,
+                stroke 0.15s ease-out,
+                box-shadow 0.15s ease-out;
   }
 
   /* Prevent transition on elements that should change instantly */
@@ -461,6 +462,14 @@ All colors MUST be HSL.
   .no-theme-transition *,
   [data-no-theme-transition],
   [data-no-theme-transition] * {
+    transition: none !important;
+  }
+
+  /* NO transitions for theme switcher elements - instant response */
+  [data-theme-switcher],
+  [data-theme-switcher] *,
+  [data-theme-dropdown],
+  [data-theme-dropdown] * {
     transition: none !important;
   }
 }

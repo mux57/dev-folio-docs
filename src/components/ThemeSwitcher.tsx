@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,17 +11,21 @@ import { useTheme } from "@/contexts/ThemeContext";
 
 const ThemeSwitcher: React.FC = () => {
   const { theme: currentTheme, setTheme, themes } = useTheme();
+  const [localTheme, setLocalTheme] = useState(currentTheme);
+
+  // Sync local theme with context theme
+  useEffect(() => {
+    setLocalTheme(currentTheme);
+  }, [currentTheme]);
 
   const handleThemeChange = (themeValue: string) => {
-    // Add immediate visual feedback
-    const button = document.querySelector('[data-theme-switcher]');
-    if (button) {
-      button.classList.add('no-theme-transition');
-      setTimeout(() => {
-        button.classList.remove('no-theme-transition');
-      }, 100);
-    }
+    // Update local state immediately for instant UI feedback
+    setLocalTheme(themeValue as any);
 
+    // Apply theme to DOM immediately to prevent any delay
+    document.documentElement.setAttribute('data-theme', themeValue);
+
+    // Call the theme setter for persistence
     setTheme(themeValue as any);
   };
 
@@ -38,9 +42,10 @@ const ThemeSwitcher: React.FC = () => {
           <span className="hidden sm:inline">Theme</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent 
-        align="end" 
+      <DropdownMenuContent
+        align="end"
         className="w-56 bg-popover/95 backdrop-blur-sm border-border z-50"
+        data-theme-dropdown
       >
         {themes.map((theme) => (
           <DropdownMenuItem
@@ -60,7 +65,7 @@ const ThemeSwitcher: React.FC = () => {
                 <div className="text-xs text-muted-foreground">{theme.description}</div>
               </div>
             </div>
-            {currentTheme === theme.value && (
+            {localTheme === theme.value && (
               <Check className="h-4 w-4 text-primary" />
             )}
           </DropdownMenuItem>

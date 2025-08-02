@@ -147,26 +147,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   useEffect(() => {
-    // Apply theme to document immediately with optimized rendering
-    const applyTheme = () => {
-      // Disable transitions temporarily to prevent visual artifacts
-      document.documentElement.style.setProperty('--theme-transition', 'none');
+    // Apply theme immediately with minimal processing
+    document.documentElement.setAttribute('data-theme', theme);
 
-      // Apply theme immediately
-      document.documentElement.setAttribute('data-theme', theme);
-
-      // Force a reflow to ensure immediate application
-      document.documentElement.offsetHeight;
-
-      // Re-enable transitions after a minimal delay
-      requestAnimationFrame(() => {
-        document.documentElement.style.removeProperty('--theme-transition');
-      });
-    };
-
-    applyTheme();
-
-    // Save theme to localStorage as backup
+    // Save theme to localStorage
     localStorage.setItem('portfolio-theme', theme);
   }, [theme]);
 
@@ -175,9 +159,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // Update state immediately for instant UI response
     setThemeState(newTheme);
-
-    // Save to localStorage immediately for instant persistence
-    localStorage.setItem('portfolio-theme', newTheme);
 
     // Handle database save asynchronously without blocking UI
     const saveToDatabase = async () => {
