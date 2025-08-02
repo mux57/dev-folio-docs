@@ -1,7 +1,11 @@
 import * as React from "react"
-import * as RechartsPrimitive from "recharts"
-
 import { cn } from "@/lib/utils"
+
+// Dynamic import for recharts to reduce initial bundle size
+const loadRecharts = async () => {
+  const recharts = await import("recharts");
+  return recharts;
+};
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const
