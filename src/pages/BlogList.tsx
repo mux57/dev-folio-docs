@@ -46,21 +46,23 @@ const BlogList = () => {
               Insights, tutorials, and thoughts on software development and technology
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-              <div className="relative max-w-md w-full">
+            <div className="flex flex-col gap-4 mb-8">
+              <div className="relative max-w-md w-full mx-auto">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="text"
                   placeholder="Search posts..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-card border-border"
+                  className="pl-10 bg-card border-border h-12"
                 />
               </div>
-              <Button onClick={handleWritePost} variant="hero" size="lg" className="group">
-                <Edit className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-                Write New Post
-              </Button>
+              <div className="flex justify-center">
+                <Button onClick={handleWritePost} variant="hero" size="lg" className="group min-h-[44px]">
+                  <Edit className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
+                  Write New Post
+                </Button>
+              </div>
             </div>
           </div>
 

@@ -78,12 +78,12 @@ const Projects = () => {
                     </Badge>
                   ))}
                 </div>
-                <div className="flex gap-3">
-                  <Button variant="outline" size="sm" className="group/btn">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button variant="outline" size="sm" className="group/btn min-h-[44px] flex-1">
                     <Github className="mr-2 h-4 w-4 group-hover/btn:scale-110 transition-transform" />
-                    Code
+                    View Code
                   </Button>
-                  <Button variant="default" size="sm" className="group/btn">
+                  <Button variant="default" size="sm" className="group/btn min-h-[44px] flex-1">
                     <ExternalLink className="mr-2 h-4 w-4 group-hover/btn:scale-110 transition-transform" />
                     Live Demo
                   </Button>
@@ -118,10 +118,10 @@ const Projects = () => {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" className="p-2 h-8 w-8">
+                  <Button variant="ghost" size="sm" className="p-2 min-h-[44px] min-w-[44px]">
                     <Github className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" className="p-2 h-8 w-8">
+                  <Button variant="ghost" size="sm" className="p-2 min-h-[44px] min-w-[44px]">
                     <ExternalLink className="h-4 w-4" />
                   </Button>
                 </div>

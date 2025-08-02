@@ -176,7 +176,7 @@ const Contact = () => {
             </p>
           </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 max-w-6xl mx-auto">
           {/* Contact Information */}
           <div className="space-y-8">
             <div>
@@ -258,7 +258,7 @@ const Contact = () => {
                     placeholder="Enter your name"
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
-                    className="bg-background border-border"
+                    className="bg-background border-border h-12"
                     required
                   />
                 </div>
@@ -273,7 +273,7 @@ const Contact = () => {
                     placeholder="Enter your email"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
-                    className="bg-background border-border"
+                    className="bg-background border-border h-12"
                     required
                   />
                 </div>
@@ -288,7 +288,7 @@ const Contact = () => {
                     placeholder="What's this about?"
                     value={formData.subject}
                     onChange={(e) => handleInputChange('subject', e.target.value)}
-                    className="bg-background border-border"
+                    className="bg-background border-border h-12"
                   />
                 </div>
 
@@ -323,7 +323,7 @@ const Contact = () => {
                   type="submit"
                   variant="hero"
                   size="lg"
-                  className="w-full group"
+                  className="w-full group min-h-[48px]"
                   disabled={isSubmitting}
                 >
                   <Send className="mr-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />

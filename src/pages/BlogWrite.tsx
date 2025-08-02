@@ -174,9 +174,9 @@ const BlogWrite = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
             {/* Main Content */}
-            <div className="lg:col-span-2">
+            <div className="xl:col-span-2 order-2 xl:order-1">
               <Card className="bg-gradient-card border-border">
                 <CardHeader>
                   <CardTitle className="text-2xl">
@@ -253,7 +253,7 @@ const BlogWrite = () => {
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-6">
+            <div className="space-y-6 order-1 xl:order-2">
               {/* Tags Section */}
               <Card className="bg-gradient-card border-border">
                 <CardHeader>
