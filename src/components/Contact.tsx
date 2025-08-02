@@ -9,13 +9,17 @@ import emailjs from '@emailjs/browser';
 
 const Contact = () => {
   const { toast } = useToast();
-  const [formData, setFormData] = useState({
+
+  // Optimized initial state
+  const initialFormState = {
     name: "",
     email: "",
     subject: "",
     company: "",
     message: ""
-  });
+  };
+
+  const [formData, setFormData] = useState(initialFormState);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
@@ -40,27 +44,29 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
-      // EmailJS configuration
-      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-      const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+      // EmailJS config
+      const config = {
+        serviceId: import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        templateId: import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
+      };
 
-      if (!serviceId || !templateId || !publicKey) {
-        throw new Error("EmailJS configuration missing. Please check your environment variables.");
+      if (!config.serviceId || !config.templateId || !config.publicKey) {
+        throw new Error("EmailJS configuration missing");
       }
 
-      // Prepare template parameters (simplified for debugging)
-      const templateParams = {
+      // Template params (optimized)
+      const params = {
         from_name: formData.name,
         from_email: formData.email,
         message: formData.message,
         subject: formData.subject || "Portfolio Contact",
-        company: formData.company || "Not specified",
+        company: formData.company || "",
         reply_to: formData.email,
       };
 
       // Send email using EmailJS
-      await emailjs.send(serviceId, templateId, templateParams, publicKey);
+      await emailjs.send(config.serviceId, config.templateId, params, config.publicKey);
 
       toast({
         title: "Message Sent Successfully! 🎉",
