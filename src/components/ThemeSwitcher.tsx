@@ -12,10 +12,28 @@ import { useTheme } from "@/contexts/ThemeContext";
 const ThemeSwitcher: React.FC = () => {
   const { theme: currentTheme, setTheme, themes } = useTheme();
 
+  const handleThemeChange = (themeValue: string) => {
+    // Add immediate visual feedback
+    const button = document.querySelector('[data-theme-switcher]');
+    if (button) {
+      button.classList.add('no-theme-transition');
+      setTimeout(() => {
+        button.classList.remove('no-theme-transition');
+      }, 100);
+    }
+
+    setTheme(themeValue as any);
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-2"
+          data-theme-switcher
+        >
           <Palette className="h-4 w-4" />
           <span className="hidden sm:inline">Theme</span>
         </Button>
@@ -27,8 +45,8 @@ const ThemeSwitcher: React.FC = () => {
         {themes.map((theme) => (
           <DropdownMenuItem
             key={theme.value}
-            onClick={() => setTheme(theme.value)}
-            className="flex items-center justify-between p-3 cursor-pointer hover:bg-accent/50"
+            onClick={() => handleThemeChange(theme.value)}
+            className="flex items-center justify-between p-3 cursor-pointer hover:bg-accent/50 transition-colors duration-150"
           >
             <div className="flex items-center gap-3">
               <div 

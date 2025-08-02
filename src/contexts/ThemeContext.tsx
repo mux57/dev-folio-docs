@@ -147,55 +147,79 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   useEffect(() => {
-    // Apply theme to document
-    document.documentElement.setAttribute('data-theme', theme);
+    // Apply theme to document immediately with optimized rendering
+    const applyTheme = () => {
+      // Disable transitions temporarily to prevent visual artifacts
+      document.documentElement.style.setProperty('--theme-transition', 'none');
+
+      // Apply theme immediately
+      document.documentElement.setAttribute('data-theme', theme);
+
+      // Force a reflow to ensure immediate application
+      document.documentElement.offsetHeight;
+
+      // Re-enable transitions after a minimal delay
+      requestAnimationFrame(() => {
+        document.documentElement.style.removeProperty('--theme-transition');
+      });
+    };
+
+    applyTheme();
+
     // Save theme to localStorage as backup
     localStorage.setItem('portfolio-theme', theme);
   }, [theme]);
 
-  const setTheme = async (newTheme: Theme) => {
+  const setTheme = (newTheme: Theme) => {
+    console.log(`🎨 Setting theme to: ${newTheme}`);
+
+    // Update state immediately for instant UI response
     setThemeState(newTheme);
 
-    try {
-      // Check if we're using local development
-      const isLocalDev = window.location.hostname === 'localhost' ||
-                        window.location.hostname === '127.0.0.1' ||
-                        localStorage.getItem('use_local_db') === 'true';
+    // Save to localStorage immediately for instant persistence
+    localStorage.setItem('portfolio-theme', newTheme);
 
-      let userId = null;
+    // Handle database save asynchronously without blocking UI
+    const saveToDatabase = async () => {
+      try {
+        // Check if we're using local development
+        const isLocalDev = window.location.hostname === 'localhost' ||
+                          window.location.hostname === '127.0.0.1' ||
+                          localStorage.getItem('use_local_db') === 'true';
 
-      if (isLocalDev) {
-        // For local development, use a mock user ID
-        userId = 'local-user-1';
-      } else {
-        // For production, get real user session
-        const { data: { session } } = await supabase.auth.getSession();
-        userId = session?.user?.id;
-      }
+        let userId = null;
 
-      if (userId) {
-        // Save theme to database (Supabase or SQLite)
-        const { error } = await supabase
-          .from('user_preferences')
-          .upsert({
-            user_id: userId,
-            theme: newTheme
-          });
-
-        if (error) {
-          console.error('Error saving theme to database:', error);
+        if (isLocalDev) {
+          // For local development, use a mock user ID
+          userId = 'local-user-1';
         } else {
-          console.log(`✅ Theme saved to database: ${newTheme}`);
+          // For production, get real user session
+          const { data: { session } } = await supabase.auth.getSession();
+          userId = session?.user?.id;
         }
-      }
 
-      // Always save to localStorage as backup
-      localStorage.setItem('portfolio-theme', newTheme);
-    } catch (error) {
-      console.error('Error in setTheme:', error);
-      // Still save to localStorage
-      localStorage.setItem('portfolio-theme', newTheme);
-    }
+        if (userId) {
+          // Save theme to database (Supabase or SQLite) - non-blocking
+          const { error } = await supabase
+            .from('user_preferences')
+            .upsert({
+              user_id: userId,
+              theme: newTheme
+            });
+
+          if (error) {
+            console.error('Error saving theme to database:', error);
+          } else {
+            console.log(`✅ Theme saved to database: ${newTheme}`);
+          }
+        }
+      } catch (error) {
+        console.error('Error in saveToDatabase:', error);
+      }
+    };
+
+    // Execute database save without awaiting to prevent blocking
+    saveToDatabase();
   };
 
   return (
