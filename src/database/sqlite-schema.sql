@@ -12,8 +12,20 @@ CREATE TABLE IF NOT EXISTS blog_posts (
   author TEXT NOT NULL DEFAULT 'Software Engineer',
   featured BOOLEAN DEFAULT 0,
   read_count INTEGER DEFAULT 0,
+  like_count INTEGER DEFAULT 0,
+  status TEXT DEFAULT 'published', -- 'draft' or 'published'
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create user_likes table to track individual likes
+CREATE TABLE IF NOT EXISTS user_likes (
+  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+  user_id TEXT NOT NULL,
+  post_id TEXT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, post_id), -- Ensure one like per user per post
+  FOREIGN KEY (post_id) REFERENCES blog_posts(id) ON DELETE CASCADE
 );
 
 -- Create profiles table (simplified for local development)

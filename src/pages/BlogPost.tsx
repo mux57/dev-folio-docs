@@ -1,10 +1,11 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, Clock, Download, Eye, Edit } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Download, Eye, Edit, Heart } from "lucide-react";
 import Header from "@/components/Header";
 import { ShareMenu } from "@/components/ShareMenu";
-import { useBlogPost } from "@/hooks/useBlogPost";
+import { useBlogPost, useLikeBlogPost } from "@/hooks/useBlogPost";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
 import { generateBlogPDF } from "@/utils/blogPdf";
 import { useToast } from "@/hooks/use-toast";
@@ -27,6 +28,9 @@ const BlogPost = () => {
 
   const slug = getSlugFromId(id || '');
   const { post, loading, error } = useBlogPost(slug);
+  const { toggleLike, isLiking, userLikes, checkUserLike } = useLikeBlogPost();
+  const [hasUserLiked, setHasUserLiked] = useState(false);
+  const [currentLikeCount, setCurrentLikeCount] = useState(0);
 
   // SEO optimization for blog post
   const stripHtml = (html: string) => {
@@ -35,61 +39,114 @@ const BlogPost = () => {
     return temp.textContent || temp.innerText || '';
   };
 
-  // Apply SEO when post is available
-  if (post && !loading && !error) {
-    const description = post.excerpt || stripHtml(post.content).substring(0, 160) + '...';
-    const publishedTime = new Date(post.created_at).toISOString();
-    const modifiedTime = new Date(post.updated_at).toISOString();
+  // Prepare SEO data (always call hooks, but with conditional data)
+  const seoData = post && !loading && !error ? {
+    description: post.excerpt || stripHtml(post.content).substring(0, 160) + '...',
+    publishedTime: new Date(post.created_at).toISOString(),
+    modifiedTime: new Date(post.updated_at).toISOString(),
+    title: `${post.title} | Mukesh Kumar Gupta Blog`,
+    keywords: [...(post.tags || []), "Mukesh Kumar Gupta", "Blog", "Software Engineering"],
+    tags: post.tags || [],
+    author: post.author || "Mukesh Kumar Gupta"
+  } : {
+    description: "Blog post loading...",
+    publishedTime: new Date().toISOString(),
+    modifiedTime: new Date().toISOString(),
+    title: "Blog Post | Mukesh Kumar Gupta",
+    keywords: ["Mukesh Kumar Gupta", "Blog", "Software Engineering"],
+    tags: [],
+    author: "Mukesh Kumar Gupta"
+  };
 
-    useSEO({
-      title: `${post.title} | Mukesh Kumar Gupta Blog`,
-      description,
-      keywords: [...(post.tags || []), "Mukesh Kumar Gupta", "Blog", "Software Engineering"],
-      type: "article",
-      author: post.author || "Mukesh Kumar Gupta",
-      publishedTime,
-      modifiedTime,
-      tags: post.tags || [],
-      url: window.location.href,
-      canonical: window.location.href
-    });
+  // Always call hooks (never conditionally)
+  useSEO({
+    title: seoData.title,
+    description: seoData.description,
+    keywords: seoData.keywords,
+    type: "article",
+    author: seoData.author,
+    publishedTime: seoData.publishedTime,
+    modifiedTime: seoData.modifiedTime,
+    tags: seoData.tags,
+    url: window.location.href,
+    canonical: window.location.href
+  });
 
-    // Structured data for blog post
-    useStructuredData({
-      "@context": "https://schema.org",
-      "@type": "BlogPosting",
-      "headline": post.title,
-      "description": description,
-      "image": "https://mukeshkumargupta.dev/og-image.jpg",
-      "author": {
-        "@type": "Person",
-        "name": post.author || "Mukesh Kumar Gupta",
-        "url": "https://mukeshkumargupta.dev/"
-      },
-      "publisher": {
-        "@type": "Person",
-        "name": "Mukesh Kumar Gupta",
-        "url": "https://mukeshkumargupta.dev/"
-      },
-      "datePublished": publishedTime,
-      "dateModified": modifiedTime,
-      "mainEntityOfPage": {
-        "@type": "WebPage",
-        "@id": window.location.href
-      },
-      "keywords": (post.tags || []).join(", "),
-      "articleSection": "Technology",
-      "inLanguage": "en-US"
-    });
-  } else {
-    // Default SEO for blog post page when loading or error
-    useSEO({
-      title: "Blog Post | Mukesh Kumar Gupta",
-      description: "Read insightful blog posts about software engineering, technology, and development by Mukesh Kumar Gupta.",
-      keywords: ["Mukesh Kumar Gupta", "Blog", "Software Engineering", "Technology"],
-      type: "website"
-    });
-  }
+  // Always call structured data hook
+  useStructuredData({
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": post?.title || "Blog Post",
+    "description": seoData.description,
+    "image": "https://mukeshkumargupta.dev/og-image.jpg",
+    "author": {
+      "@type": "Person",
+      "name": seoData.author,
+      "url": "https://mukeshkumargupta.dev/"
+    },
+    "publisher": {
+      "@type": "Person",
+      "name": "Mukesh Kumar Gupta",
+      "url": "https://mukeshkumargupta.dev/"
+    },
+    "datePublished": seoData.publishedTime,
+    "dateModified": seoData.modifiedTime,
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": window.location.href
+    },
+    "keywords": seoData.tags.join(", "),
+    "articleSection": "Technology",
+    "inLanguage": "en-US"
+  });
+
+  // Initialize like count and check user like status
+  useEffect(() => {
+    if (post) {
+      setCurrentLikeCount(post.like_count);
+    }
+  }, [post]);
+
+  // Check if user has liked this post on component mount
+  useEffect(() => {
+    const checkLikeStatus = async () => {
+      if (post?.id) {
+        const liked = userLikes[post.id] ?? await checkUserLike(post.id);
+        setHasUserLiked(liked);
+      }
+    };
+
+    checkLikeStatus();
+  }, [post?.id, userLikes, checkUserLike]);
+
+  // Handle like/unlike functionality
+  const handleToggleLike = async () => {
+    if (!post || isLiking) return; // Prevent multiple clicks
+
+    try {
+      const result = await toggleLike(post.id);
+      if (result.success) {
+        // Update local state immediately for instant feedback
+        const newLikedState = result.action === 'liked';
+        setHasUserLiked(newLikedState);
+        setCurrentLikeCount(prev => prev + (result.likeChange || 0));
+
+        toast({
+          title: result.action === 'liked' ? "Post Liked!" : "Post Unliked!",
+          description: result.action === 'liked'
+            ? "Thank you for liking this post!"
+            : "Post removed from your likes.",
+        });
+      }
+    } catch (error) {
+      console.error('Like toggle error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update like status. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -226,27 +283,37 @@ const BlogPost = () => {
                 ))}
               </div>
               <div className="flex gap-2">
+                <Button
+                  onClick={handleToggleLike}
+                  variant={hasUserLiked ? "default" : "outline"}
+                  size="sm"
+                  className="group"
+                  disabled={isLiking}
+                >
+                  <Heart className={`mr-2 h-4 w-4 group-hover:scale-110 transition-transform ${hasUserLiked ? 'fill-current' : ''}`} />
+                  {currentLikeCount} {currentLikeCount === 1 ? 'Like' : 'Likes'}
+                </Button>
                 {isAdmin && (
-                  <Button 
-                    onClick={handleEditPost} 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    onClick={handleEditPost}
+                    variant="outline"
+                    size="sm"
                     className="group"
                   >
                     <Edit className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
                     Edit
                   </Button>
                 )}
-                <Button 
-                  onClick={handleDownloadPDF} 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  onClick={handleDownloadPDF}
+                  variant="outline"
+                  size="sm"
                   className="group"
                 >
                   <Download className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
                   PDF
                 </Button>
-                <ShareMenu 
+                <ShareMenu
                   shareData={shareData}
                   variant="outline"
                   size="sm"
@@ -268,26 +335,13 @@ const BlogPost = () => {
 
           {/* Article Footer */}
           <footer className="mt-16 pt-8 border-t border-border">
-            <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
+            <div className="text-center">
               <p className="text-muted-foreground">
-                Thanks for reading! Share your thoughts and download as PDF.
+                Thanks for reading! I hope you found this post helpful and insightful.
               </p>
-              <div className="flex gap-3">
-                {isAdmin && (
-                  <Button onClick={handleEditPost} variant="outline" className="group">
-                    <Edit className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
-                    Edit Post
-                  </Button>
-                )}
-                <Button onClick={handleDownloadPDF} variant="outline" className="group">
-                  <Download className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
-                  Download PDF
-                </Button>
-                <ShareMenu 
-                  shareData={shareData}
-                  variant="default"
-                />
-              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                Use the action buttons above to like, share, or download this post.
+              </p>
             </div>
           </footer>
         </div>

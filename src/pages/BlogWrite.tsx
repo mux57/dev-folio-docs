@@ -5,11 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Eye, X } from "lucide-react";
+import { ArrowLeft, Save, Eye, X, FileText, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useBlogPost } from "@/hooks/useBlogPost";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
 import Header from "@/components/Header";
+import { supabase } from "@/integrations/supabase/client";
+import RichTextEditor from "@/components/RichTextEditor";
 
 const BlogWrite = () => {
   const navigate = useNavigate();
@@ -79,7 +81,7 @@ const BlogWrite = () => {
     }));
   };
 
-  const handleSave = () => {
+  const handleSave = async (isDraft = false) => {
     if (!formData.title.trim() || !formData.content.trim()) {
       toast({
         title: "Missing Information",
@@ -89,22 +91,85 @@ const BlogWrite = () => {
       return;
     }
 
-    // In a real app, this would save to a database
-    toast({
-      title: isEditMode ? "Post Updated!" : "Post Saved!",
-      description: isEditMode 
-        ? "Your blog post has been updated successfully." 
-        : "Your blog post has been saved successfully.",
-    });
-    
-    // Simulate navigation to the post
-    setTimeout(() => {
-      if (isEditMode && slug) {
-        navigate(`/blog/${slug}`);
+    try {
+      // Generate slug from title if creating new post
+      const generateSlug = (title: string) => {
+        return title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '');
+      };
+
+      const postSlug = isEditMode ? slug : generateSlug(formData.title);
+      const status = isDraft ? 'draft' : 'published';
+
+      if (isEditMode && post) {
+        // Update existing post
+        const { error } = await supabase
+          .from('blog_posts')
+          .update({
+            title: formData.title,
+            content: formData.content,
+            excerpt: formData.excerpt || null,
+            tags: formData.tags,
+            status: status,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', post.id);
+
+        if (error) throw error;
+
+        toast({
+          title: isDraft ? "Draft Saved!" : "Post Updated!",
+          description: isDraft
+            ? "Your draft has been saved successfully."
+            : "Your blog post has been updated successfully.",
+        });
+
+        if (!isDraft) {
+          navigate(`/blog/${postSlug}`);
+        }
       } else {
-        navigate('/blog');
+        // Create new post
+        const { error } = await supabase
+          .from('blog_posts')
+          .insert({
+            title: formData.title,
+            content: formData.content,
+            excerpt: formData.excerpt || null,
+            slug: postSlug,
+            tags: formData.tags,
+            author: 'Software Engineer',
+            featured: false,
+            status: status,
+            like_count: 0
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        toast({
+          title: isDraft ? "Draft Saved!" : "Post Created!",
+          description: isDraft
+            ? "Your draft has been saved successfully."
+            : "Your blog post has been created successfully.",
+        });
+
+        if (!isDraft) {
+          navigate(`/blog/${postSlug}`);
+        } else {
+          navigate('/blog');
+        }
       }
-    }, 1000);
+    } catch (error) {
+      console.error('Error saving post:', error);
+      toast({
+        title: "Save Failed",
+        description: "There was an error saving your post. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -163,13 +228,21 @@ const BlogWrite = () => {
                 <Eye className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
                 {isPreview ? 'Edit' : 'Preview'}
               </Button>
-              <Button 
-                onClick={handleSave} 
+              <Button
+                onClick={() => handleSave(true)}
+                variant="outline"
+                className="group"
+              >
+                <FileText className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
+                Save as Draft
+              </Button>
+              <Button
+                onClick={() => handleSave(false)}
                 variant="hero"
                 className="group"
               >
-                <Save className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
-                {isEditMode ? 'Update Post' : 'Save Post'}
+                <Upload className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
+                {isEditMode ? 'Update Post' : 'Publish Post'}
               </Button>
             </div>
           </div>
@@ -219,16 +292,16 @@ const BlogWrite = () => {
                         />
                       </div>
 
-                      {/* Content Input */}
+                      {/* Content Input - Rich Text Editor */}
                       <div>
                         <label className="text-sm font-medium text-foreground mb-2 block">
                           Content
                         </label>
-                        <Textarea
-                          placeholder="Write your post content here..."
+                        <RichTextEditor
                           value={formData.content}
-                          onChange={(e) => handleInputChange('content', e.target.value)}
-                          className="bg-background border-border resize-none min-h-96"
+                          onChange={(value) => handleInputChange('content', value)}
+                          placeholder="Write your post content here..."
+                          className="bg-background border-border"
                         />
                       </div>
                     </>
@@ -270,7 +343,12 @@ const BlogWrite = () => {
                         placeholder="Add a tag..."
                         value={formData.currentTag}
                         onChange={(e) => handleInputChange('currentTag', e.target.value)}
-                        onKeyPress={handleKeyPress}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && formData.currentTag.trim()) {
+                            e.preventDefault();
+                            handleAddTag();
+                          }
+                        }}
                         className="bg-background border-border"
                       />
                       <Button 
