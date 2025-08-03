@@ -1,73 +1,166 @@
-# Welcome to your Lovable project
+# 🚀 Modern Portfolio Website
 
-## Project info
+A beautiful, responsive portfolio website built with React, TypeScript, and Supabase. Features include blog functionality, Google OAuth authentication, contact forms, and more.
 
-**URL**: https://lovable.dev/projects/e85a2eac-9f6f-4645-bff9-44aa4367dea2
+## ✨ **Features**
 
-## How can I edit this code?
+- 🎨 **Modern Design** - Clean, responsive UI with dark/light themes
+- 📝 **Blog System** - Create, edit, and manage blog posts
+- 🔐 **Google OAuth** - Secure authentication with Supabase
+- 📧 **Contact Form** - EmailJS integration for contact messages
+- 🛡️ **Bot Protection** - Smart contact information protection
+- 📱 **Mobile Responsive** - Works perfectly on all devices
+- 🚀 **Fast Performance** - Optimized builds and lazy loading
+- 🌙 **Theme Support** - Multiple color themes available
 
-There are several ways of editing your application.
+## 🛠️ **Tech Stack**
 
-**Use Lovable**
+- **Frontend:** React 18, TypeScript, Vite
+- **Styling:** Tailwind CSS, Radix UI
+- **Database:** Supabase (PostgreSQL)
+- **Authentication:** Supabase Auth + Google OAuth
+- **Email:** EmailJS
+- **Deployment:** GitHub Pages
+- **Icons:** Lucide React
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/e85a2eac-9f6f-4645-bff9-44aa4367dea2) and start prompting.
+## 🚀 **Quick Start**
 
-Changes made via Lovable will be committed automatically to this repo.
+### **1. Clone the Repository**
+```bash
+git clone https://github.com/yourusername/your-portfolio.git
+cd your-portfolio
+npm install
+```
 
-**Use your preferred IDE**
+### **2. Environment Setup**
+```bash
+# Copy environment template
+cp .env.example .env
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+# Edit with your values
+nano .env
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### **3. Start Development Server**
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Visit `http://localhost:8080` to see your portfolio!
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📚 **Documentation**
 
-**Use GitHub Codespaces**
+### **Setup Guides**
+- 🔐 [**Supabase + Google Auth Setup**](./docs/SUPABASE_GOOGLE_AUTH_SETUP.md) - Complete OAuth configuration
+- 📧 [**EmailJS Setup**](./docs/EMAILJS_SETUP.md) - Contact form configuration
+- ⚙️ [**Environment Variables**](./docs/ENVIRONMENT_SETUP.md) - All required variables
+- 🚀 [**Deployment Guide**](./docs/DEPLOYMENT.md) - Deploy to GitHub Pages
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### **Quick Links**
+- [Live Demo](https://yourusername.github.io/your-portfolio/)
+- [Issues](https://github.com/yourusername/your-portfolio/issues)
 
-## What technologies are used for this project?
+## 🔧 **Environment Variables**
 
-This project is built with:
+Required environment variables (see [Environment Setup](./docs/ENVIRONMENT_SETUP.md) for details):
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```env
+# Supabase
+VITE_SUPABASE_URL=your-supabase-url
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+VITE_ADMIN_EMAIL=your-admin-email
 
-## How can I deploy this project?
+# EmailJS
+VITE_EMAILJS_SERVICE_ID=your-service-id
+VITE_EMAILJS_TEMPLATE_ID=your-template-id
+VITE_EMAILJS_PUBLIC_KEY=your-public-key
 
-Simply open [Lovable](https://lovable.dev/projects/e85a2eac-9f6f-4645-bff9-44aa4367dea2) and click on Share -> Publish.
+# Contact Info
+VITE_CONTACT_EMAIL=your-email
+VITE_CONTACT_PHONE=your-phone
+VITE_GITHUB_USERNAME=your-github
+VITE_LINKEDIN_USERNAME=your-linkedin
+```
 
-## Can I connect a custom domain to my Lovable project?
+## 🚀 **Deployment**
 
-Yes, you can!
+### **GitHub Pages (Recommended)**
+1. **Enable GitHub Pages** in repository settings
+2. **Add all required secrets** (see [Deployment Guide](./docs/DEPLOYMENT.md))
+3. **Push to main branch** to trigger deployment
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### **Other Platforms**
+- **Vercel:** Connect GitHub repo and add environment variables
+- **Netlify:** Connect GitHub repo and configure build settings
+- **Railway:** Deploy from GitHub with environment variables
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## 📱 **Available Scripts**
+
+```bash
+# Development
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run preview      # Preview production build
+npm run lint         # Run ESLint
+
+# Database (Optional - for local SQLite)
+npm run sqlite:install  # Install SQLite server dependencies
+npm run sqlite:server   # Start local SQLite server
+npm run dev:full       # Start both SQLite server and dev server
+```
+
+## 🎨 **Customization**
+
+### **Themes**
+- Multiple color themes available in the UI
+- Themes are stored in localStorage
+- Easy to add new themes in `src/contexts/ThemeContext.tsx`
+
+### **Content**
+- Update personal information in environment variables
+- Modify sections in `src/components/`
+- Add new pages by creating routes in `src/App.tsx`
+
+### **Styling**
+- Tailwind CSS for utility-first styling
+- Radix UI for accessible components
+- Custom CSS variables for theming
+
+## 🔒 **Security Features**
+
+- **Environment Variables** - Sensitive data stored securely
+- **Bot Protection** - Contact information protected from scrapers
+- **RLS Policies** - Database-level security with Supabase
+- **OAuth Authentication** - Secure Google sign-in
+- **Input Validation** - Form validation and sanitization
+
+## 🤝 **Contributing**
+
+1. **Fork the repository**
+2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
+3. **Commit your changes** (`git commit -m 'Add amazing feature'`)
+4. **Push to the branch** (`git push origin feature/amazing-feature`)
+5. **Open a Pull Request**
+
+## 📄 **License**
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 **Support**
+
+- 📖 **Documentation:** Check the [docs](./docs/) folder
+- 🐛 **Issues:** Report bugs in [GitHub Issues](https://github.com/yourusername/your-portfolio/issues)
+- 💬 **Discussions:** Join [GitHub Discussions](https://github.com/yourusername/your-portfolio/discussions)
+
+## 🙏 **Acknowledgments**
+
+- [React](https://reactjs.org/) - UI library
+- [Supabase](https://supabase.com/) - Backend as a service
+- [Tailwind CSS](https://tailwindcss.com/) - CSS framework
+- [Radix UI](https://www.radix-ui.com/) - UI components
+- [EmailJS](https://www.emailjs.com/) - Email service
+- [Lucide](https://lucide.dev/) - Icon library
+
+---
+
+**⭐ Star this repository if you found it helpful!**
