@@ -5,8 +5,8 @@ import { supabase as authSupabase } from '@/lib/supabase';
 // Always use Supabase authentication
 const USE_SUPABASE_AUTH = true;
 
-// Get admin email from environment or use default
-const PORTFOLIO_OWNER_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'mukeshknit57@gmail.com';
+// Get admin email from environment (required)
+const PORTFOLIO_OWNER_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
 
 // Get Supabase URL for logging
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;

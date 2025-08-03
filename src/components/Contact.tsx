@@ -124,7 +124,7 @@ const Contact = () => {
 
       toast({
         title: "Failed to Send Message",
-        description: `Error: ${errorMessage}. Please try again or contact me directly at mukeshknit57@gmail.com`,
+        description: `Error: ${errorMessage}. Please try again or contact me directly at ${import.meta.env.VITE_CONTACT_EMAIL || 'contact@example.com'}`,
         variant: "destructive"
       });
     } finally {
@@ -136,31 +136,31 @@ const Contact = () => {
     {
       icon: Mail,
       label: "Email",
-      value: "mukeshknit57@gmail.com",
-      href: "mailto:mukeshknit57@gmail.com"
+      value: import.meta.env.VITE_CONTACT_EMAIL || "contact@example.com",
+      href: `mailto:${import.meta.env.VITE_CONTACT_EMAIL}`
     },
     {
       icon: Phone,
       label: "Phone",
-      value: "+91 7411729430",
-      href: "tel:+917411729430"
+      value: import.meta.env.VITE_CONTACT_PHONE || "+1 234 567 8900",
+      href: `tel:${import.meta.env.VITE_CONTACT_PHONE?.replace(/\s/g, '')}`
     },
     {
       icon: Github,
       label: "GitHub",
-      value: "github.com/mux57",
-      href: "https://github.com/mux57"
+      value: import.meta.env.VITE_GITHUB_USERNAME ? `github.com/${import.meta.env.VITE_GITHUB_USERNAME}` : "github.com/username",
+      href: import.meta.env.VITE_GITHUB_USERNAME ? `https://github.com/${import.meta.env.VITE_GITHUB_USERNAME}` : "https://github.com"
     },
     {
       icon: Linkedin,
       label: "LinkedIn",
-      value: "linkedin.com/in/mukeshknit57",
-      href: "https://www.linkedin.com/in/mukeshknit57/"
+      value: import.meta.env.VITE_LINKEDIN_USERNAME ? `linkedin.com/in/${import.meta.env.VITE_LINKEDIN_USERNAME}` : "linkedin.com/in/username",
+      href: import.meta.env.VITE_LINKEDIN_USERNAME ? `https://www.linkedin.com/in/${import.meta.env.VITE_LINKEDIN_USERNAME}/` : "https://linkedin.com"
     },
     {
       icon: MapPin,
       label: "Location",
-      value: "Bengaluru, India",
+      value: import.meta.env.VITE_LOCATION || "Your City, Country",
       href: null
     }
   ];
