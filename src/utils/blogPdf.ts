@@ -1,4 +1,8 @@
-import jsPDF from 'jspdf';
+// Dynamic import for jsPDF to reduce initial bundle size
+const loadJsPDF = async () => {
+  const { default: jsPDF } = await import('jspdf');
+  return jsPDF;
+};
 
 export interface BlogPost {
   title: string;
@@ -41,6 +45,8 @@ const stripHtml = (html: string): string => {
 // Optimized text-based PDF generation for much smaller file sizes
 export const generateBlogPDF = async (post: BlogPost) => {
   try {
+    // Load jsPDF dynamically
+    const jsPDF = await loadJsPDF();
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = 210;
     const pageHeight = 297;
