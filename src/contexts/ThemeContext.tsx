@@ -86,24 +86,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const loadThemeFromDatabase = async () => {
     try {
-      // Check if we're using local development
-      const isLocalDev = window.location.hostname === 'localhost' ||
-                        window.location.hostname === '127.0.0.1' ||
-                        localStorage.getItem('use_local_db') === 'true';
-
-      let userId = null;
-
-      if (isLocalDev) {
-        // For local development, use a mock user ID
-        userId = 'local-user-1';
-      } else {
-        // For production, get real user session
-        const { data: { session } } = await supabase.auth.getSession();
-        userId = session?.user?.id;
-      }
+      // Get real user session from Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
 
       if (userId) {
-        // Fetch theme from database (Supabase or SQLite)
+        // Fetch theme from Supabase database
         const { data, error } = await supabase
           .from('user_preferences')
           .select('theme')
@@ -163,24 +151,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Handle database save asynchronously without blocking UI
     const saveToDatabase = async () => {
       try {
-        // Check if we're using local development
-        const isLocalDev = window.location.hostname === 'localhost' ||
-                          window.location.hostname === '127.0.0.1' ||
-                          localStorage.getItem('use_local_db') === 'true';
-
-        let userId = null;
-
-        if (isLocalDev) {
-          // For local development, use a mock user ID
-          userId = 'local-user-1';
-        } else {
-          // For production, get real user session
-          const { data: { session } } = await supabase.auth.getSession();
-          userId = session?.user?.id;
-        }
+        // Get real user session from Supabase
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id;
 
         if (userId) {
-          // Save theme to database (Supabase or SQLite) - non-blocking
+          // Save theme to Supabase database - non-blocking
           const { error } = await supabase
             .from('user_preferences')
             .upsert({

@@ -22,8 +22,10 @@ export type Database = {
           excerpt: string | null
           featured: boolean | null
           id: string
+          like_count: number
           read_count: number | null
           slug: string
+          status: 'draft' | 'published'
           tags: string[] | null
           title: string
           updated_at: string
@@ -55,6 +57,41 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      blog_likes: {
+        Row: {
+          id: string
+          post_id: string
+          user_id: string | null
+          user_email: string | null
+          ip_address: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          post_id: string
+          user_id?: string | null
+          user_email?: string | null
+          ip_address?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          post_id?: string
+          user_id?: string | null
+          user_email?: string | null
+          ip_address?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       profiles: {
         Row: {

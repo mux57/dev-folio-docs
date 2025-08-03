@@ -110,34 +110,7 @@ const Header = () => {
 
           <div className="hidden md:flex items-center space-x-4">
             <ThemeSwitcher />
-            
-            {user ? (
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-muted-foreground">
-                  {user.email}
-                </span>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleSignOut}
-                  className="gap-2"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Sign Out
-                </Button>
-              </div>
-            ) : (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setShowAuthDialog(true)}
-                className="gap-2"
-              >
-                <User className="h-4 w-4" />
-                Sign In
-              </Button>
-            )}
-            
+
             <Button
               variant="download"
               size="sm"
