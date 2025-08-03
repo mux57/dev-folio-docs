@@ -12,6 +12,13 @@ import { useUserPermissions } from "@/hooks/useUserPermissions";
 import Header from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
 import RichTextEditor from "@/components/RichTextEditor";
+import { AdminRoute } from "@/components/ProtectedRoute";
+import { useAdminAuth } from "@/hooks/useAuth";
+import { Shield, LogOut } from "lucide-react";
+import { verifyDatabaseConnection, runDatabaseDiagnostics } from "@/utils/databaseVerification";
+
+// Make verifyDatabase available globally
+(window as any).verifyDatabase = runDatabaseDiagnostics;
 
 const BlogWrite = () => {
   const navigate = useNavigate();
@@ -19,9 +26,10 @@ const BlogWrite = () => {
   const { toast } = useToast();
   const { isAdmin, loading: permissionsLoading } = useUserPermissions();
   const { post, loading: postLoading } = useBlogPost(slug || '');
+  const { user, signOut } = useAdminAuth();
   
   const isEditMode = Boolean(slug);
-  
+
   const [formData, setFormData] = useState({
     title: "",
     excerpt: "",
@@ -31,6 +39,38 @@ const BlogWrite = () => {
   });
 
   const [isPreview, setIsPreview] = useState(false);
+  const [databaseReady, setDatabaseReady] = useState(false);
+
+  // Verify database connection on component mount
+  useEffect(() => {
+    const checkDatabase = async () => {
+      try {
+        const status = await verifyDatabaseConnection();
+        setDatabaseReady(status.connected && status.tablesExist);
+
+        if (!status.connected) {
+          toast({
+            title: "Database Connection Error",
+            description: "Unable to connect to the database. Please check your connection.",
+            variant: "destructive"
+          });
+        } else if (!status.tablesExist) {
+          toast({
+            title: "Database Setup Required",
+            description: "Some database tables are missing. Please run the migration script.",
+            variant: "destructive"
+          });
+        } else {
+          console.log('✅ Database is ready for blog operations');
+        }
+      } catch (error) {
+        console.error('Database verification failed:', error);
+        setDatabaseReady(false);
+      }
+    };
+
+    checkDatabase();
+  }, []);
 
   // Load existing post data for editing
   useEffect(() => {
@@ -91,6 +131,12 @@ const BlogWrite = () => {
       return;
     }
 
+    // Show loading state
+    const loadingToast = toast({
+      title: "Saving...",
+      description: "Your blog post is being saved to the database.",
+    });
+
     try {
       // Generate slug from title if creating new post
       const generateSlug = (title: string) => {
@@ -103,27 +149,45 @@ const BlogWrite = () => {
       const postSlug = isEditMode ? slug : generateSlug(formData.title);
       const status = isDraft ? 'draft' : 'published';
 
+      console.log('💾 Saving blog post to database:', {
+        title: formData.title,
+        slug: postSlug,
+        status,
+        isEditMode
+      });
+
       if (isEditMode && post) {
         // Update existing post
-        const { error } = await supabase
-          .from('blog_posts')
-          .update({
-            title: formData.title,
-            content: formData.content,
-            excerpt: formData.excerpt || null,
-            tags: formData.tags,
-            status: status,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', post.id);
+        console.log('📝 Updating existing post:', post.id);
 
-        if (error) throw error;
+        const updateData = {
+          title: formData.title,
+          content: formData.content,
+          excerpt: formData.excerpt || null,
+          tags: formData.tags,
+          status: status,
+          updated_at: new Date().toISOString()
+        };
+
+        const { data, error } = await supabase
+          .from('blog_posts')
+          .update(updateData)
+          .eq('id', post.id)
+          .select()
+          .single();
+
+        if (error) {
+          console.error('❌ Update error:', error);
+          throw new Error(`Failed to update post: ${error.message}`);
+        }
+
+        console.log('✅ Post updated successfully:', data);
 
         toast({
           title: isDraft ? "Draft Saved!" : "Post Updated!",
           description: isDraft
-            ? "Your draft has been saved successfully."
-            : "Your blog post has been updated successfully.",
+            ? "Your draft has been saved successfully to the database."
+            : "Your blog post has been updated successfully in the database.",
         });
 
         if (!isDraft) {
@@ -131,29 +195,39 @@ const BlogWrite = () => {
         }
       } else {
         // Create new post
-        const { error } = await supabase
+        console.log('🆕 Creating new post with slug:', postSlug);
+
+        const insertData = {
+          title: formData.title,
+          content: formData.content,
+          excerpt: formData.excerpt || null,
+          slug: postSlug,
+          tags: formData.tags,
+          author: 'Mukesh Kumar Gupta',
+          featured: false,
+          status: status,
+          like_count: 0,
+          read_count: 0
+        };
+
+        const { data, error } = await supabase
           .from('blog_posts')
-          .insert({
-            title: formData.title,
-            content: formData.content,
-            excerpt: formData.excerpt || null,
-            slug: postSlug,
-            tags: formData.tags,
-            author: 'Software Engineer',
-            featured: false,
-            status: status,
-            like_count: 0
-          })
+          .insert(insertData)
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Insert error:', error);
+          throw new Error(`Failed to create post: ${error.message}`);
+        }
+
+        console.log('✅ Post created successfully:', data);
 
         toast({
           title: isDraft ? "Draft Saved!" : "Post Created!",
           description: isDraft
-            ? "Your draft has been saved successfully."
-            : "Your blog post has been created successfully.",
+            ? "Your draft has been saved successfully to the database."
+            : "Your blog post has been created and published to the database.",
         });
 
         if (!isDraft) {
@@ -162,11 +236,25 @@ const BlogWrite = () => {
           navigate('/blog');
         }
       }
-    } catch (error) {
-      console.error('Error saving post:', error);
+    } catch (error: any) {
+      console.error('❌ Error saving post:', error);
+
+      // Provide specific error messages
+      let errorMessage = "There was an error saving your post. Please try again.";
+
+      if (error.message?.includes('duplicate key')) {
+        errorMessage = "A post with this title already exists. Please choose a different title.";
+      } else if (error.message?.includes('permission')) {
+        errorMessage = "You don't have permission to save posts. Please check your authentication.";
+      } else if (error.message?.includes('network')) {
+        errorMessage = "Network error. Please check your internet connection and try again.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
       toast({
         title: "Save Failed",
-        description: "There was an error saving your post. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     }
@@ -203,13 +291,14 @@ const BlogWrite = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      
-      <main className="pt-24 pb-16">
-        <div className="container mx-auto px-6 max-w-6xl">
-          {/* Navigation */}
-          <div className="flex items-center justify-between mb-8">
+    <AdminRoute>
+      <div className="min-h-screen bg-background">
+        <Header />
+
+        <main className="pt-24 pb-16">
+          <div className="container mx-auto px-6 max-w-6xl">
+            {/* Navigation */}
+            <div className="flex items-center justify-between mb-8">
             <Button 
               onClick={() => navigate('/blog')} 
               variant="ghost" 
@@ -219,9 +308,28 @@ const BlogWrite = () => {
               Back to Blog
             </Button>
             
-            <div className="flex gap-3">
-              <Button 
-                onClick={() => setIsPreview(!isPreview)} 
+            <div className="flex items-center gap-3">
+              {/* Admin indicator */}
+              <div className="flex items-center gap-2">
+                <Badge variant="default" className="flex items-center gap-1">
+                  <Shield className="h-3 w-3" />
+                  Admin
+                </Badge>
+                <span className="text-sm text-muted-foreground">{user?.email}</span>
+                <Button
+                  onClick={() => signOut()}
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="h-6 w-px bg-border" />
+
+              <Button
+                onClick={() => setIsPreview(!isPreview)}
                 variant="outline"
                 className="group"
               >
@@ -398,6 +506,7 @@ const BlogWrite = () => {
         </div>
       </main>
     </div>
+    </AdminRoute>
   );
 };
 
