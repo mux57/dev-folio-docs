@@ -37,8 +37,10 @@ export type Database = {
           excerpt?: string | null
           featured?: boolean | null
           id?: string
+          like_count?: number
           read_count?: number | null
           slug: string
+          status?: 'draft' | 'published'
           tags?: string[] | null
           title: string
           updated_at?: string
@@ -50,8 +52,10 @@ export type Database = {
           excerpt?: string | null
           featured?: boolean | null
           id?: string
+          like_count?: number
           read_count?: number | null
           slug?: string
+          status?: 'draft' | 'published'
           tags?: string[] | null
           title?: string
           updated_at?: string
@@ -191,7 +195,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_like_count: {
+        Args: {
+          post_id: string
+        }
+        Returns: undefined
+      }
+      decrement_like_count: {
+        Args: {
+          post_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

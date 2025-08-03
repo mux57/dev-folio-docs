@@ -107,17 +107,22 @@ export const useLikeBlogPost = () => {
   const [isLiking, setIsLiking] = useState(false);
   const [userLikes, setUserLikes] = useState<Record<string, boolean>>({});
 
-  // Get current user ID (mock for local, real for production)
+  // Get current user ID - Supabase only
   const getCurrentUserId = async () => {
-    const isLocalDev = window.location.hostname === 'localhost' ||
-                      window.location.hostname === '127.0.0.1' ||
-                      localStorage.getItem('use_local_db') === 'true';
+    const { data: { session } } = await supabase.auth.getSession();
 
-    if (isLocalDev) {
-      return 'local-user-1'; // Mock user for local development
+    if (session?.user?.id) {
+      return session.user.id;
     } else {
-      const { data: { session } } = await supabase.auth.getSession();
-      return session?.user?.id || 'anonymous-user';
+      // For anonymous users, generate a consistent UUID
+      const anonymousId = localStorage.getItem('anonymous_user_id');
+      if (anonymousId) {
+        return anonymousId;
+      } else {
+        const newAnonymousId = crypto.randomUUID();
+        localStorage.setItem('anonymous_user_id', newAnonymousId);
+        return newAnonymousId;
+      }
     }
   };
 
@@ -126,15 +131,8 @@ export const useLikeBlogPost = () => {
     try {
       const userId = await getCurrentUserId();
 
-      // Check if using SQLite client
-      if (typeof supabase.likePost === 'function') {
-        const { data } = await (supabase as any).checkUserLike(postId, userId);
-        return data?.liked || false;
-      }
-
-      // Supabase check
       const { data, error } = await supabase
-        .from('user_likes')
+        .from('blog_likes')
         .select('id')
         .eq('user_id', userId)
         .eq('post_id', postId)
@@ -157,51 +155,37 @@ export const useLikeBlogPost = () => {
 
       if (isCurrentlyLiked) {
         // Unlike the post
-        if (typeof supabase.unlikePost === 'function') {
-          // SQLite client
-          const { error } = await (supabase as any).unlikePost(postId, userId);
-          if (error) throw error;
-        } else {
-          // Supabase
-          const { error: deleteError } = await supabase
-            .from('user_likes')
-            .delete()
-            .eq('user_id', userId)
-            .eq('post_id', postId);
+        const { error: deleteError } = await supabase
+          .from('blog_likes')
+          .delete()
+          .eq('user_id', userId)
+          .eq('post_id', postId);
 
-          if (deleteError) throw deleteError;
+        if (deleteError) throw deleteError;
 
-          // Decrement like count
-          const { error: updateError } = await supabase.rpc('decrement_like_count', {
-            post_id: postId
-          });
+        // Decrement like count
+        const { error: updateError } = await supabase.rpc('decrement_like_count', {
+          post_id: postId
+        });
 
-          if (updateError) throw updateError;
-        }
+        if (updateError) throw updateError;
 
         setUserLikes(prev => ({ ...prev, [postId]: false }));
         return { success: true, action: 'unliked', likeChange: -1 };
       } else {
         // Like the post
-        if (typeof supabase.likePost === 'function') {
-          // SQLite client
-          const { error } = await (supabase as any).likePost(postId, userId);
-          if (error) throw error;
-        } else {
-          // Supabase - Insert like record
-          const { error: insertError } = await supabase
-            .from('user_likes')
-            .insert({ user_id: userId, post_id: postId });
+        const { error: insertError } = await supabase
+          .from('blog_likes')
+          .insert({ user_id: userId, post_id: postId });
 
-          if (insertError) throw insertError;
+        if (insertError) throw insertError;
 
-          // Increment like count
-          const { error: updateError } = await supabase.rpc('increment_like_count', {
-            post_id: postId
-          });
+        // Increment like count
+        const { error: updateError } = await supabase.rpc('increment_like_count', {
+          post_id: postId
+        });
 
-          if (updateError) throw updateError;
-        }
+        if (updateError) throw updateError;
 
         setUserLikes(prev => ({ ...prev, [postId]: true }));
         return { success: true, action: 'liked', likeChange: 1 };
