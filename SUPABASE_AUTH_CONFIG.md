@@ -8,7 +8,7 @@
 
 2. **Add these URLs to "Redirect URLs"**:
    ```
-   http://localhost:8081/admin/callback
+   http://localhost:8080/admin/callback
    https://your-domain.com/admin/callback
    ```
 
@@ -18,7 +18,7 @@
 
 1. **Set "Site URL"** to:
    ```
-   http://localhost:8081
+   http://localhost:8080
    ```
    (For production, use your actual domain)
 
