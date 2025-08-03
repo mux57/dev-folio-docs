@@ -1,35 +1,16 @@
 import { useState, useEffect } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
-import { createClient } from '@supabase/supabase-js';
+import { supabase as authSupabase } from '@/lib/supabase';
 
-// Use environment variables
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://zfglwpfoshlteckqnbgr.supabase.co";
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmZ2x3cGZvc2hsdGVja3FuYmdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4OTIzNTAsImV4cCI6MjA2OTQ2ODM1MH0.RezElKHz5f5D1lxxgqpoNhDs7jkQy1IawI63tIg0US8";
-
-// Create a single shared Supabase client for auth
-let authSupabase: any = null;
-
-// Initialize auth client only once
-const getAuthSupabase = () => {
-  if (!authSupabase) {
-    authSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true,
-        storageKey: 'supabase.auth.token' // Use default storage key
-      }
-    });
-  }
-  return authSupabase;
-};
-
-// Environment flag to force Supabase authentication
-const USE_SUPABASE_AUTH = import.meta.env.VITE_USE_SUPABASE_AUTH === 'true' ||
-                         localStorage.getItem('force_supabase_auth') === 'true';
+// Always use Supabase authentication
+const USE_SUPABASE_AUTH = true;
 
 // Get admin email from environment or use default
 const PORTFOLIO_OWNER_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'mukeshknit57@gmail.com';
+
+// Get Supabase URL for logging
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Debug logging
 console.log('🔧 Auth Configuration:');
@@ -75,7 +56,7 @@ if (TEMP_BYPASS) {
 // Global session check function for debugging
 (window as any).checkAuthSession = async () => {
   try {
-    const { data: { session }, error } = await getAuthSupabase().auth.getSession();
+    const { data: { session }, error } = await authSupabase.auth.getSession();
 
     console.log('🔍 Current Auth Session:', {
       hasSession: !!session,
@@ -112,7 +93,7 @@ if (TEMP_BYPASS) {
 
     if (hasAuthParams) {
       // Force session refresh to pick up auth from URL
-      const { data: { session }, error } = await getAuthSupabase().auth.getSession();
+      const { data: { session }, error } = await authSupabase.auth.getSession();
 
       console.log('🔍 Session after URL processing:', {
         hasSession: !!session,
@@ -153,60 +134,30 @@ export const useAuth = () => {
     // Get initial session
     const getInitialSession = async () => {
       try {
-        if (USE_SUPABASE_AUTH) {
-          // Use Supabase authentication
-          console.log('🔐 Using Supabase authentication');
-          const { data: { session }, error } = await getAuthSupabase().auth.getSession();
+        // Use Supabase authentication
+        console.log('🔐 Using Supabase authentication');
+        const { data: { session }, error } = await authSupabase.auth.getSession();
 
-          if (error) {
-            console.error('Error getting session:', error);
-          }
-
-          const isAdmin = session?.user?.email === PORTFOLIO_OWNER_EMAIL;
-
-          // Debug logging for admin check
-          console.log('🔍 Admin Check Debug:', {
-            userEmail: session?.user?.email,
-            adminEmail: PORTFOLIO_OWNER_EMAIL,
-            isAdmin: isAdmin,
-            emailMatch: session?.user?.email === PORTFOLIO_OWNER_EMAIL
-          });
-
-          setAuthState({
-            user: session?.user || null,
-            session: session,
-            loading: false,
-            isAdmin
-          });
-        } else {
-          // Use local mock authentication
-          console.log('🔧 Using local mock authentication');
-          const localAuth = localStorage.getItem('local_admin_auth');
-          if (localAuth === 'true') {
-            const mockUser = {
-              id: 'local-admin-user',
-              email: 'mukeshknit57@gmail.com',
-              user_metadata: {
-                full_name: 'Mukesh Kumar Gupta',
-                avatar_url: ''
-              }
-            };
-
-            setAuthState({
-              user: mockUser as any,
-              session: { user: mockUser } as any,
-              loading: false,
-              isAdmin: true
-            });
-          } else {
-            setAuthState({
-              user: null,
-              session: null,
-              loading: false,
-              isAdmin: false
-            });
-          }
+        if (error) {
+          console.error('Error getting session:', error);
         }
+
+        const isAdmin = session?.user?.email === PORTFOLIO_OWNER_EMAIL;
+
+        // Debug logging for admin check
+        console.log('🔍 Admin Check Debug:', {
+          userEmail: session?.user?.email,
+          adminEmail: PORTFOLIO_OWNER_EMAIL,
+          isAdmin: isAdmin,
+          emailMatch: session?.user?.email === PORTFOLIO_OWNER_EMAIL
+        });
+
+        setAuthState({
+          user: session?.user || null,
+          session: session,
+          loading: false,
+          isAdmin
+        });
       } catch (error) {
         console.error('Auth initialization error:', error);
         setAuthState(prev => ({ ...prev, loading: false }));
@@ -215,44 +166,42 @@ export const useAuth = () => {
 
     getInitialSession();
 
-    // Listen for auth changes (only for Supabase)
-    if (USE_SUPABASE_AUTH) {
-      const { data: { subscription } } = getAuthSupabase().auth.onAuthStateChange(
-        async (event: string, session: Session | null) => {
-          console.log('🔄 Auth state changed:', event, session?.user?.email);
+    // Listen for auth changes
+    const { data: { subscription } } = authSupabase.auth.onAuthStateChange(
+      async (event: string, session: Session | null) => {
+        console.log('🔄 Auth state changed:', event, session?.user?.email);
 
-          const isAdmin = session?.user?.email === PORTFOLIO_OWNER_EMAIL;
+        const isAdmin = session?.user?.email === PORTFOLIO_OWNER_EMAIL;
 
-          // Debug logging for auth state change
-          console.log('🔄 Auth State Change Debug:', {
-            event: event,
-            userEmail: session?.user?.email,
-            adminEmail: PORTFOLIO_OWNER_EMAIL,
-            isAdmin: isAdmin,
-            sessionExists: !!session,
-            userExists: !!session?.user
-          });
+        // Debug logging for auth state change
+        console.log('🔄 Auth State Change Debug:', {
+          event: event,
+          userEmail: session?.user?.email,
+          adminEmail: PORTFOLIO_OWNER_EMAIL,
+          isAdmin: isAdmin,
+          sessionExists: !!session,
+          userExists: !!session?.user
+        });
 
-          // Handle different auth events
-          if (event === 'SIGNED_IN' && session) {
-            console.log('✅ User signed in successfully');
-          } else if (event === 'SIGNED_OUT') {
-            console.log('👋 User signed out');
-          } else if (event === 'TOKEN_REFRESHED') {
-            console.log('🔄 Token refreshed');
-          }
-
-          setAuthState({
-            user: session?.user || null,
-            session: session,
-            loading: false,
-            isAdmin
-          });
+        // Handle different auth events
+        if (event === 'SIGNED_IN' && session) {
+          console.log('✅ User signed in successfully');
+        } else if (event === 'SIGNED_OUT') {
+          console.log('👋 User signed out');
+        } else if (event === 'TOKEN_REFRESHED') {
+          console.log('🔄 Token refreshed');
         }
-      );
 
-      return () => subscription.unsubscribe();
-    }
+        setAuthState({
+          user: session?.user || null,
+          session: session,
+          loading: false,
+          isAdmin
+        });
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
   // Sign in with Google
@@ -274,7 +223,7 @@ export const useAuth = () => {
         const redirectUrl = `${window.location.origin}/admin/callback`;
         console.log('🔗 OAuth redirect URL:', redirectUrl);
 
-        const { data, error } = await getAuthSupabase().auth.signInWithOAuth({
+        const { data, error } = await authSupabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
             redirectTo: redirectUrl,
@@ -301,31 +250,6 @@ export const useAuth = () => {
 
         console.log('✅ OAuth initiated successfully');
         return { data, error: null };
-      } else {
-        // Local mock authentication
-        console.log('🔧 Local development mode: Simulating Google OAuth');
-
-        const mockUser = {
-          id: 'local-admin-user',
-          email: 'mukeshknit57@gmail.com',
-          user_metadata: {
-            full_name: 'Mukesh Kumar Gupta',
-            avatar_url: ''
-          }
-        };
-
-        // Set local storage flag
-        localStorage.setItem('local_admin_auth', 'true');
-
-        // Set the auth state manually for local development
-        setAuthState({
-          user: mockUser as any,
-          session: { user: mockUser } as any,
-          loading: false,
-          isAdmin: true
-        });
-
-        return { data: { user: mockUser }, error: null };
       }
     } catch (error) {
       console.error('Sign in error:', error);
@@ -336,44 +260,17 @@ export const useAuth = () => {
   // Sign in with email/password (fallback)
   const signInWithEmail = async (email: string, password: string) => {
     try {
-      if (USE_SUPABASE_AUTH) {
-        const { data, error } = await getAuthSupabase().auth.signInWithPassword({
-          email,
-          password
-        });
+      const { data, error } = await authSupabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-        if (error) {
-          console.error('Email sign in error:', error);
-          throw error;
-        }
-
-        return { data, error: null };
-      } else {
-        // Local mock authentication
-        if (email === 'mukeshknit57@gmail.com') {
-          const mockUser = {
-            id: 'local-admin-user',
-            email: 'mukeshknit57@gmail.com',
-            user_metadata: {
-              full_name: 'Mukesh Kumar Gupta',
-              avatar_url: ''
-            }
-          };
-
-          localStorage.setItem('local_admin_auth', 'true');
-
-          setAuthState({
-            user: mockUser as any,
-            session: { user: mockUser } as any,
-            loading: false,
-            isAdmin: true
-          });
-
-          return { data: { user: mockUser }, error: null };
-        } else {
-          throw new Error('Invalid credentials');
-        }
+      if (error) {
+        console.error('Email sign in error:', error);
+        throw error;
       }
+
+      return { data, error: null };
     } catch (error) {
       console.error('Email sign in error:', error);
       return { data: null, error };
@@ -383,22 +280,11 @@ export const useAuth = () => {
   // Sign out
   const signOut = async () => {
     try {
-      if (USE_SUPABASE_AUTH) {
-        const { error } = await getAuthSupabase().auth.signOut();
+      const { error } = await authSupabase.auth.signOut();
 
-        if (error) {
-          console.error('Sign out error:', error);
-          throw error;
-        }
-      } else {
-        // Local mock sign out
-        localStorage.removeItem('local_admin_auth');
-        setAuthState({
-          user: null,
-          session: null,
-          loading: false,
-          isAdmin: false
-        });
+      if (error) {
+        console.error('Sign out error:', error);
+        throw error;
       }
 
       return { error: null };
@@ -411,21 +297,16 @@ export const useAuth = () => {
   // Reset password
   const resetPassword = async (email: string) => {
     try {
-      if (USE_SUPABASE_AUTH) {
-        const { data, error } = await getAuthSupabase().auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/reset-password`
-        });
+      const { data, error } = await authSupabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
 
-        if (error) {
-          console.error('Reset password error:', error);
-          throw error;
-        }
-
-        return { data, error: null };
-      } else {
-        // Local mock - just return success
-        return { data: null, error: null };
+      if (error) {
+        console.error('Reset password error:', error);
+        throw error;
       }
+
+      return { data, error: null };
     } catch (error) {
       console.error('Reset password error:', error);
       return { data: null, error };
@@ -436,7 +317,7 @@ export const useAuth = () => {
   const checkSession = async () => {
     try {
       console.log('🔍 Manual session check...');
-      const { data: { session }, error } = await getAuthSupabase().auth.getSession();
+      const { data: { session }, error } = await authSupabase.auth.getSession();
 
       console.log('🔍 Session check result:', {
         session: !!session,
