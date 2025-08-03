@@ -164,52 +164,55 @@ const Header = () => {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden mt-4 pb-4 border-t border-border">
-            <div className="flex flex-col space-y-4 pt-4">
+            <div className="flex flex-col space-y-2 pt-4">
               {navItems.map((item) => (
                 <button
                   key={item.label}
                   onClick={() => handleNavigation(item)}
-                  className="text-left text-foreground hover:text-primary transition-colors duration-300 font-medium py-2"
+                  className="text-left text-foreground hover:text-primary transition-colors duration-300 font-medium py-3 px-2 rounded-lg hover:bg-muted/50 min-h-[44px] flex items-center"
                 >
                   {item.label}
                 </button>
               ))}
-              <div className="flex flex-col gap-4 pt-2">
-                <ThemeSwitcher />
-                
+              <div className="flex flex-col gap-3 pt-4 border-t border-border mt-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">Theme</span>
+                  <ThemeSwitcher />
+                </div>
+
                 {user ? (
-                  <div className="flex flex-col gap-2">
-                    <span className="text-sm text-muted-foreground">
+                  <div className="flex flex-col gap-3">
+                    <div className="text-sm text-muted-foreground truncate">
                       {user.email}
-                    </span>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={handleSignOut}
-                      className="gap-2 w-fit"
+                      className="gap-2 justify-start min-h-[44px]"
                     >
                       <LogOut className="h-4 w-4" />
                       Sign Out
                     </Button>
                   </div>
                 ) : (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setShowAuthDialog(true)}
-                    className="gap-2 w-fit"
+                    className="gap-2 justify-start min-h-[44px]"
                   >
                     <User className="h-4 w-4" />
                     Sign In
                   </Button>
                 )}
-                
+
                 <Button
                   variant="download"
                   size="sm"
                   onClick={() => downloadResume()}
                   disabled={isResumeLoading}
-                  className="group w-fit"
+                  className="group justify-start min-h-[44px]"
                 >
                   <Download className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
                   {isResumeLoading ? 'Loading...' : 'Download Resume'}

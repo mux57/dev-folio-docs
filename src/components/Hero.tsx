@@ -18,13 +18,13 @@ const Hero = () => {
       
       <div className="container mx-auto px-6 text-center relative z-10">
         <div className="animate-in slide-in-from-bottom-8 duration-1000">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent leading-tight">
             Staff Engineer @Tekion.Corp
           </h1>
-          <h2 className="text-2xl md:text-3xl font-semibold mb-4 text-foreground">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold mb-4 text-foreground">
             Software Engineer
           </h2>
-          <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed px-4 sm:px-0">
             Passionate about backend development, distributed systems, architecture, and scalability.
             Specializing in Java, Spring Boot, and building high-performance distributed solutions.
           </p>

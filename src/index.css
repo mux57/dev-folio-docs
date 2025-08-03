@@ -55,9 +55,10 @@ All colors MUST be HSL.
     --shadow-lg: 0 25px 50px -12px hsl(210 25% 4% / 0.5);
     --shadow-glow: 0 0 40px hsl(200 85% 60% / 0.15);
 
-    /* Animations */
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-spring: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    /* Animations - Optimized for theme switching */
+    --transition-smooth: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-theme: background-color 0.15s ease-out, border-color 0.15s ease-out, color 0.15s ease-out;
 
     --sidebar-background: 210 25% 10%;
     --sidebar-foreground: 210 40% 98%;
@@ -433,5 +434,42 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Optimized theme transitions */
+  html {
+    /* Disable transitions during theme switching when --theme-transition is set to none */
+    transition: var(--theme-transition, background-color 0.15s ease-out, color 0.15s ease-out);
+  }
+
+  /* Smooth theme transitions for most elements */
+  body,
+  main,
+  section,
+  div:not([data-theme-switcher]):not([data-theme-dropdown]),
+  button:not([data-theme-switcher]),
+  [role="menuitem"]:not([data-theme-dropdown] [role="menuitem"]) {
+    transition: background-color 0.15s ease-out,
+                border-color 0.15s ease-out,
+                color 0.15s ease-out,
+                fill 0.15s ease-out,
+                stroke 0.15s ease-out,
+                box-shadow 0.15s ease-out;
+  }
+
+  /* Prevent transition on elements that should change instantly */
+  .no-theme-transition,
+  .no-theme-transition *,
+  [data-no-theme-transition],
+  [data-no-theme-transition] * {
+    transition: none !important;
+  }
+
+  /* NO transitions for theme switcher elements - instant response */
+  [data-theme-switcher],
+  [data-theme-switcher] *,
+  [data-theme-dropdown],
+  [data-theme-dropdown] * {
+    transition: none !important;
   }
 }
