@@ -6,6 +6,7 @@ import { visualizer } from "rollup-plugin-visualizer";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  base: process.env.NODE_ENV === 'production' ? '/dev-folio-docs/' : '/',
   server: {
     host: "::",
     port: 8080,
