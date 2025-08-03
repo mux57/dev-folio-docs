@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Calendar, Clock, ArrowRight, Edit, Search, Eye } from "lucide-react";
+import { Calendar, Clock, ArrowRight, Edit, Search, Eye, Heart, FileText } from "lucide-react";
 import Header from "@/components/Header";
 import { useBlogPosts } from "@/hooks/useBlogPost";
 
@@ -88,6 +88,16 @@ const BlogList = () => {
                       <Eye className="h-4 w-4" />
                       {post.read_count} reads
                     </div>
+                    <div className="flex items-center gap-1">
+                      <Heart className="h-4 w-4" />
+                      {post.like_count || 0} likes
+                    </div>
+                    {post.status === 'draft' && (
+                      <div className="flex items-center gap-1 text-orange-500">
+                        <FileText className="h-4 w-4" />
+                        Draft
+                      </div>
+                    )}
                   </div>
                   <CardTitle className="text-foreground group-hover:text-primary transition-colors text-xl mb-3">
                     {post.title}

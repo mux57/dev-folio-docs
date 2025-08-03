@@ -11,6 +11,8 @@ interface BlogPost {
   author: string;
   featured: boolean;
   read_count: number;
+  like_count: number;
+  status: 'draft' | 'published';
   created_at: string;
   updated_at: string;
 }
@@ -30,6 +32,13 @@ interface UserPreferences {
   theme: string;
   created_at: string;
   updated_at: string;
+}
+
+interface UserLike {
+  id: string;
+  user_id: string;
+  post_id: string;
+  created_at: string;
 }
 
 interface ResumeLink {
@@ -224,7 +233,9 @@ class SQLiteClient {
                 slug: 'building-scalable-react-applications',
                 tags: JSON.stringify(['React', 'Architecture', 'Performance']),
                 featured: 1,
-                read_count: 245
+                read_count: 245,
+                like_count: 42,
+                status: 'published'
               },
               {
                 id: '2',
@@ -234,17 +245,19 @@ class SQLiteClient {
                 slug: 'the-future-of-web-development',
                 tags: JSON.stringify(['Web Development', 'Trends', 'Technology']),
                 featured: 0,
-                read_count: 189
+                read_count: 189,
+                like_count: 28,
+                status: 'published'
               }
             ];
 
             posts.forEach(post => {
               tx.executeSql(`
-                INSERT INTO blog_posts (id, title, content, excerpt, slug, tags, featured, read_count, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO blog_posts (id, title, content, excerpt, slug, tags, featured, read_count, like_count, status, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
               `, [
-                post.id, post.title, post.content, post.excerpt, post.slug, 
-                post.tags, post.featured, post.read_count, 
+                post.id, post.title, post.content, post.excerpt, post.slug,
+                post.tags, post.featured, post.read_count, post.like_count, post.status,
                 new Date().toISOString(), new Date().toISOString()
               ]);
             });
@@ -646,6 +659,136 @@ class SQLiteClient {
         })
       })
     };
+  }
+
+  // Like/Unlike functionality
+  async likePost(postId: string, userId: string = 'local-user-1') {
+    if (this.useLocalStorage) {
+      // Handle localStorage likes
+      const likesKey = `sqlite_user_likes_${userId}`;
+      const userLikes = JSON.parse(localStorage.getItem(likesKey) || '[]');
+
+      if (userLikes.includes(postId)) {
+        return { data: null, error: { message: 'Post already liked' } };
+      }
+
+      userLikes.push(postId);
+      localStorage.setItem(likesKey, JSON.stringify(userLikes));
+
+      // Update post like count
+      const posts = JSON.parse(localStorage.getItem('sqlite_blog_posts') || '[]');
+      const postIndex = posts.findIndex((p: any) => p.id === postId);
+      if (postIndex !== -1) {
+        posts[postIndex].like_count = (posts[postIndex].like_count || 0) + 1;
+        localStorage.setItem('sqlite_blog_posts', JSON.stringify(posts));
+      }
+
+      return { data: { success: true }, error: null };
+    }
+
+    return new Promise((resolve) => {
+      this.db.transaction((tx: any) => {
+        // Check if user already liked this post
+        tx.executeSql(
+          'SELECT id FROM user_likes WHERE user_id = ? AND post_id = ?',
+          [userId, postId],
+          (_tx: any, result: any) => {
+            if (result.rows.length > 0) {
+              resolve({ data: null, error: { message: 'Post already liked' } });
+              return;
+            }
+
+            // Add like
+            tx.executeSql(
+              'INSERT INTO user_likes (user_id, post_id, created_at) VALUES (?, ?, ?)',
+              [userId, postId, new Date().toISOString()],
+              () => {
+                // Update post like count
+                tx.executeSql(
+                  'UPDATE blog_posts SET like_count = like_count + 1 WHERE id = ?',
+                  [postId],
+                  () => resolve({ data: { success: true }, error: null }),
+                  (_tx: any, error: any) => resolve({ data: null, error })
+                );
+              },
+              (_tx: any, error: any) => resolve({ data: null, error })
+            );
+          },
+          (_tx: any, error: any) => resolve({ data: null, error })
+        );
+      });
+    });
+  }
+
+  async unlikePost(postId: string, userId: string = 'local-user-1') {
+    if (this.useLocalStorage) {
+      // Handle localStorage unlikes
+      const likesKey = `sqlite_user_likes_${userId}`;
+      const userLikes = JSON.parse(localStorage.getItem(likesKey) || '[]');
+
+      if (!userLikes.includes(postId)) {
+        return { data: null, error: { message: 'Post not liked' } };
+      }
+
+      const updatedLikes = userLikes.filter((id: string) => id !== postId);
+      localStorage.setItem(likesKey, JSON.stringify(updatedLikes));
+
+      // Update post like count
+      const posts = JSON.parse(localStorage.getItem('sqlite_blog_posts') || '[]');
+      const postIndex = posts.findIndex((p: any) => p.id === postId);
+      if (postIndex !== -1) {
+        posts[postIndex].like_count = Math.max(0, (posts[postIndex].like_count || 0) - 1);
+        localStorage.setItem('sqlite_blog_posts', JSON.stringify(posts));
+      }
+
+      return { data: { success: true }, error: null };
+    }
+
+    return new Promise((resolve) => {
+      this.db.transaction((tx: any) => {
+        // Remove like
+        tx.executeSql(
+          'DELETE FROM user_likes WHERE user_id = ? AND post_id = ?',
+          [userId, postId],
+          (_tx: any, result: any) => {
+            if (result.rowsAffected === 0) {
+              resolve({ data: null, error: { message: 'Post not liked' } });
+              return;
+            }
+
+            // Update post like count
+            tx.executeSql(
+              'UPDATE blog_posts SET like_count = like_count - 1 WHERE id = ?',
+              [postId],
+              () => resolve({ data: { success: true }, error: null }),
+              (_tx: any, error: any) => resolve({ data: null, error })
+            );
+          },
+          (_tx: any, error: any) => resolve({ data: null, error })
+        );
+      });
+    });
+  }
+
+  async checkUserLike(postId: string, userId: string = 'local-user-1') {
+    if (this.useLocalStorage) {
+      const likesKey = `sqlite_user_likes_${userId}`;
+      const userLikes = JSON.parse(localStorage.getItem(likesKey) || '[]');
+      return { data: { liked: userLikes.includes(postId) }, error: null };
+    }
+
+    return new Promise((resolve) => {
+      this.db.transaction((tx: any) => {
+        tx.executeSql(
+          'SELECT id FROM user_likes WHERE user_id = ? AND post_id = ?',
+          [userId, postId],
+          (_tx: any, result: any) => {
+            resolve({ data: { liked: result.rows.length > 0 }, error: null });
+          },
+          (_tx: any, error: any) => resolve({ data: null, error })
+        );
+      });
+    });
   }
 
   // Simple auth mock
