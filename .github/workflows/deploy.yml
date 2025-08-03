@@ -44,6 +44,11 @@ jobs:
           echo "VITE_EMAILJS_SERVICE_ID=${{ secrets.VITE_EMAILJS_SERVICE_ID }}" >> .env
           echo "VITE_EMAILJS_TEMPLATE_ID=${{ secrets.VITE_EMAILJS_TEMPLATE_ID }}" >> .env
           echo "VITE_EMAILJS_PUBLIC_KEY=${{ secrets.VITE_EMAILJS_PUBLIC_KEY }}" >> .env
+          echo "VITE_CONTACT_EMAIL=${{ secrets.VITE_CONTACT_EMAIL }}" >> .env
+          echo "VITE_CONTACT_PHONE=${{ secrets.VITE_CONTACT_PHONE }}" >> .env
+          echo "VITE_GITHUB_USERNAME=${{ secrets.VITE_GITHUB_USERNAME }}" >> .env
+          echo "VITE_LINKEDIN_USERNAME=${{ secrets.VITE_LINKEDIN_USERNAME }}" >> .env
+          echo "VITE_LOCATION=${{ secrets.VITE_LOCATION }}" >> .env
 
       - name: Build project
         run: npm run build
