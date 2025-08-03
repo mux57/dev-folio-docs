@@ -69,6 +69,59 @@ All colors MUST be HSL.
     --sidebar-ring: 200 85% 60%;
   }
 
+  /* Default Theme - Cosmic Purple */
+  [data-theme="default"] {
+    --background: 224 71% 4%;
+    --foreground: 210 40% 98%;
+
+    --card: 224 71% 6%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 224 71% 6%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 247 92% 68%;
+    --primary-foreground: 224 71% 4%;
+    --primary-glow: 247 92% 78%;
+
+    --secondary: 262 83% 15%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 262 83% 15%;
+    --muted-foreground: 215.4 16.3% 65%;
+
+    --accent: 262 83% 58%;
+    --accent-foreground: 224 71% 4%;
+
+    --border: 262 83% 15%;
+    --input: 262 83% 15%;
+    --ring: 247 92% 68%;
+
+    /* Custom colors */
+    --hero-bg: 224 71% 2%;
+    --hero-accent: 247 92% 68%;
+    --tech-bg: 262 83% 12%;
+    --project-bg: 224 71% 5%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(247 92% 68%), hsl(262 83% 58%));
+    --gradient-hero: linear-gradient(135deg, hsl(224 71% 4%) 0%, hsl(262 83% 12%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(224 71% 6%) 0%, hsl(262 83% 15%) 100%);
+
+    /* Shadows */
+    --shadow-lg: 0 25px 50px -12px hsl(224 71% 2% / 0.5);
+    --shadow-glow: 0 0 40px hsl(247 92% 68% / 0.15);
+
+    --sidebar-background: 224 71% 6%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 247 92% 68%;
+    --sidebar-primary-foreground: 224 71% 4%;
+    --sidebar-accent: 262 83% 15%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 262 83% 15%;
+    --sidebar-ring: 247 92% 68%;
+  }
+
   /* Ocean Blue Theme */
   [data-theme="ocean"] {
     --background: 210 25% 8%;
@@ -226,6 +279,112 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 30 15% 98%;
     --sidebar-border: 20 25% 15%;
     --sidebar-ring: 25 90% 65%;
+  }
+
+  /* Forest Green Theme - Soothing */
+  [data-theme="forest"] {
+    --background: 140 25% 8%;
+    --foreground: 140 15% 95%;
+
+    --card: 140 25% 10%;
+    --card-foreground: 140 15% 95%;
+
+    --popover: 140 25% 10%;
+    --popover-foreground: 140 15% 95%;
+
+    --primary: 142 76% 36%;
+    --primary-foreground: 140 25% 8%;
+    --primary-glow: 142 76% 46%;
+
+    --secondary: 140 30% 15%;
+    --secondary-foreground: 140 15% 95%;
+
+    --muted: 140 30% 15%;
+    --muted-foreground: 140 20% 65%;
+
+    --accent: 158 64% 52%;
+    --accent-foreground: 140 25% 8%;
+
+    --border: 140 30% 15%;
+    --input: 140 30% 15%;
+    --ring: 142 76% 36%;
+
+    /* Custom colors */
+    --hero-bg: 140 25% 6%;
+    --hero-accent: 142 76% 36%;
+    --tech-bg: 140 30% 12%;
+    --project-bg: 140 25% 9%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(142 76% 36%), hsl(158 64% 52%));
+    --gradient-hero: linear-gradient(135deg, hsl(140 25% 8%) 0%, hsl(140 30% 12%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(140 25% 10%) 0%, hsl(140 30% 15%) 100%);
+
+    /* Shadows */
+    --shadow-lg: 0 25px 50px -12px hsl(140 25% 4% / 0.5);
+    --shadow-glow: 0 0 40px hsl(142 76% 36% / 0.15);
+
+    --sidebar-background: 140 25% 10%;
+    --sidebar-foreground: 140 15% 95%;
+    --sidebar-primary: 142 76% 36%;
+    --sidebar-primary-foreground: 140 25% 8%;
+    --sidebar-accent: 140 30% 15%;
+    --sidebar-accent-foreground: 140 15% 95%;
+    --sidebar-border: 140 30% 15%;
+    --sidebar-ring: 142 76% 36%;
+  }
+
+  /* Warm Sepia Theme - Reading Friendly */
+  [data-theme="sepia"] {
+    --background: 35 25% 92%;
+    --foreground: 30 15% 15%;
+
+    --card: 35 20% 96%;
+    --card-foreground: 30 15% 15%;
+
+    --popover: 35 20% 96%;
+    --popover-foreground: 30 15% 15%;
+
+    --primary: 30 50% 45%;
+    --primary-foreground: 35 25% 92%;
+    --primary-glow: 30 50% 55%;
+
+    --secondary: 35 15% 85%;
+    --secondary-foreground: 30 15% 15%;
+
+    --muted: 35 15% 85%;
+    --muted-foreground: 30 20% 35%;
+
+    --accent: 45 65% 55%;
+    --accent-foreground: 30 15% 15%;
+
+    --border: 35 15% 80%;
+    --input: 35 15% 88%;
+    --ring: 30 50% 45%;
+
+    /* Custom colors */
+    --hero-bg: 35 25% 88%;
+    --hero-accent: 30 50% 45%;
+    --tech-bg: 35 20% 90%;
+    --project-bg: 35 25% 94%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(30 50% 45%), hsl(45 65% 55%));
+    --gradient-hero: linear-gradient(135deg, hsl(35 25% 90%) 0%, hsl(35 20% 88%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(35 20% 94%) 0%, hsl(35 15% 90%) 100%);
+
+    /* Shadows */
+    --shadow-lg: 0 25px 50px -12px hsl(30 15% 20% / 0.1);
+    --shadow-glow: 0 0 40px hsl(30 50% 45% / 0.1);
+
+    --sidebar-background: 35 20% 96%;
+    --sidebar-foreground: 30 15% 15%;
+    --sidebar-primary: 30 50% 45%;
+    --sidebar-primary-foreground: 35 25% 92%;
+    --sidebar-accent: 35 15% 85%;
+    --sidebar-accent-foreground: 30 15% 15%;
+    --sidebar-border: 35 15% 80%;
+    --sidebar-ring: 30 50% 45%;
   }
 
   .dark {

@@ -6,6 +6,7 @@ import AuthDialog from "@/components/AuthDialog";
 import { supabase } from "@/integrations/supabase/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useDownloadResume } from "@/hooks/useResumeLinks";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const { downloadResume, isLoading: isResumeLoading } = useDownloadResume();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,11 +39,7 @@ const Header = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleDownloadResume = () => {
-    import("@/utils/resumeDownload").then(({ downloadResume }) => {
-      downloadResume();
-    });
-  };
+
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -70,6 +68,7 @@ const Header = () => {
   const navItems = [
     { label: 'Home', href: '#hero' },
     { label: 'Skills', href: '#skills' },
+    { label: 'Education', href: '#education' },
     { label: 'Projects', href: '#projects' },
     { label: 'Blog', href: '#blog' },
     { label: 'Contact', href: '#contact' },
@@ -85,9 +84,13 @@ const Header = () => {
     >
       <nav className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          <button 
-            onClick={() => navigate('/')}
-            className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent hover:opacity-80 transition-opacity"
+          <button
+            onClick={() => {
+              console.log('Portfolio logo clicked - navigating to home');
+              navigate('/');
+            }}
+            className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent hover:opacity-80 hover:scale-105 transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md px-2 py-1"
+            aria-label="Go to home page"
           >
             Portfolio
           </button>
@@ -135,14 +138,15 @@ const Header = () => {
               </Button>
             )}
             
-            <Button 
-              variant="download" 
-              size="sm" 
-              onClick={handleDownloadResume}
+            <Button
+              variant="download"
+              size="sm"
+              onClick={() => downloadResume()}
+              disabled={isResumeLoading}
               className="group"
             >
               <Download className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
-              Resume
+              {isResumeLoading ? 'Loading...' : 'Resume'}
             </Button>
           </div>
 
@@ -200,14 +204,15 @@ const Header = () => {
                   </Button>
                 )}
                 
-                <Button 
-                  variant="download" 
-                  size="sm" 
-                  onClick={handleDownloadResume}
+                <Button
+                  variant="download"
+                  size="sm"
+                  onClick={() => downloadResume()}
+                  disabled={isResumeLoading}
                   className="group w-fit"
                 >
                   <Download className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
-                  Download Resume
+                  {isResumeLoading ? 'Loading...' : 'Download Resume'}
                 </Button>
               </div>
             </div>

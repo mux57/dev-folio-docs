@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Protection Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .pass { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .fail { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔒 Contact Protection Test Results</h1>
+    
+    <div id="test-results"></div>
+    
+    <script>
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            document.getElementById('test-results').appendChild(div);
+        }
+
+        function runContactProtectionTests() {
+            addResult('🧪 <strong>Running Contact Protection Tests...</strong>');
+            
+            // Test 1: Check if contact meta tags are present
+            const contactMeta = document.querySelector('meta[name="contact-protection"]');
+            if (contactMeta) {
+                addResult('✅ Contact protection meta tag found', 'pass');
+            } else {
+                addResult('❌ Contact protection meta tag missing', 'fail');
+            }
+            
+            // Test 2: Check robots meta tags
+            const robotsMeta = document.querySelector('meta[name="robots"]');
+            if (robotsMeta && robotsMeta.content.includes('noarchive')) {
+                addResult('✅ Robots meta tag with noarchive found', 'pass');
+            } else {
+                addResult('❌ Robots meta tag with proper protection missing', 'fail');
+            }
+            
+            // Test 3: Check if contact section has protection attributes
+            setTimeout(() => {
+                const contactSection = document.getElementById('contact');
+                if (contactSection) {
+                    const hasProtection = contactSection.hasAttribute('data-nosnippet') || 
+                                        contactSection.closest('[data-contact-protection="enabled"]');
+                    if (hasProtection) {
+                        addResult('✅ Contact section has protection attributes', 'pass');
+                    } else {
+                        addResult('❌ Contact section lacks protection attributes', 'fail');
+                    }
+                } else {
+                    addResult('ℹ️ Contact section not found (may be on different page)', 'info');
+                }
+            }, 1000);
+            
+            // Test 4: Simulate bot user agent
+            addResult('🤖 <strong>Bot Detection Test:</strong>');
+            const originalUserAgent = navigator.userAgent;
+            
+            // This would normally be done server-side, but we can test the concept
+            const botPatterns = ['bot', 'crawler', 'spider', 'googlebot'];
+            const isBot = botPatterns.some(pattern => 
+                originalUserAgent.toLowerCase().includes(pattern)
+            );
+            
+            if (isBot) {
+                addResult('🤖 Bot detected - contact info should be obfuscated', 'info');
+            } else {
+                addResult('👤 Human user detected - contact info can be revealed', 'info');
+            }
+            
+            // Test 5: Check for contact protection wrapper
+            setTimeout(() => {
+                const protectionWrapper = document.querySelector('[data-contact-protection="enabled"]');
+                if (protectionWrapper) {
+                    addResult('✅ Contact protection wrapper found', 'pass');
+                } else {
+                    addResult('❌ Contact protection wrapper missing', 'fail');
+                }
+            }, 1500);
+            
+            // Test 6: Display current page meta tags
+            addResult('<strong>📋 Current Page Meta Tags:</strong>');
+            const metaTags = document.querySelectorAll('meta');
+            let metaInfo = '<pre>';
+            metaTags.forEach(meta => {
+                const name = meta.getAttribute('name') || meta.getAttribute('property');
+                const content = meta.getAttribute('content');
+                if (name && content) {
+                    metaInfo += `${name}: ${content}\n`;
+                }
+            });
+            metaInfo += '</pre>';
+            addResult(metaInfo);
+            
+            addResult('🏁 <strong>Test Complete!</strong> Check results above.', 'info');
+        }
+        
+        // Run tests when page loads
+        window.addEventListener('load', () => {
+            setTimeout(runContactProtectionTests, 500);
+        });
+    </script>
+</body>
+</html>

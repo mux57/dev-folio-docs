@@ -1,12 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { ArrowDown, Download, Github, Linkedin, Mail } from "lucide-react";
+import { useDownloadResume } from "@/hooks/useResumeLinks";
 
 const Hero = () => {
-  const handleDownloadResume = () => {
-    import("@/utils/resumeDownload").then(({ downloadResume }) => {
-      downloadResume();
-    });
-  };
+  const { downloadResume, isLoading } = useDownloadResume();
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -22,14 +19,14 @@ const Hero = () => {
       <div className="container mx-auto px-6 text-center relative z-10">
         <div className="animate-in slide-in-from-bottom-8 duration-1000">
           <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent">
-            Software Engineer
+            Staff Engineer @Tekion.Corp
           </h1>
           <h2 className="text-2xl md:text-3xl font-semibold mb-4 text-foreground">
-            Full Stack Developer
+            Software Engineer
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-            Passionate about creating innovative solutions with modern technologies. 
-            Specializing in React, Node.js, and cloud architectures.
+            Passionate about backend development, distributed systems, architecture, and scalability.
+            Specializing in Java, Spring Boot, and building high-performance distributed solutions.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
@@ -42,25 +39,41 @@ const Hero = () => {
               View My Work
               <ArrowDown className="ml-2 h-5 w-5 group-hover:translate-y-1 transition-transform" />
             </Button>
-            <Button 
-              variant="download" 
-              size="xl" 
-              onClick={handleDownloadResume}
+            <Button
+              variant="download"
+              size="xl"
+              onClick={() => downloadResume()}
+              disabled={isLoading}
               className="group"
             >
               <Download className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-              Download Resume
+              {isLoading ? 'Loading...' : 'Download Resume'}
             </Button>
           </div>
 
           <div className="flex justify-center space-x-6">
-            <Button variant="ghost" size="icon" className="hover:text-primary">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:text-primary"
+              onClick={() => window.open('https://github.com/mux57', '_blank')}
+            >
               <Github className="h-6 w-6" />
             </Button>
-            <Button variant="ghost" size="icon" className="hover:text-primary">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:text-primary"
+              onClick={() => window.open('https://www.linkedin.com/in/mukeshknit57/', '_blank')}
+            >
               <Linkedin className="h-6 w-6" />
             </Button>
-            <Button variant="ghost" size="icon" className="hover:text-primary">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:text-primary"
+              onClick={() => window.open('mailto:mukeshknit57@gmail.com', '_blank')}
+            >
               <Mail className="h-6 w-6" />
             </Button>
           </div>
