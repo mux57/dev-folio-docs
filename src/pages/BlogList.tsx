@@ -4,10 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Calendar, Clock, ArrowRight, Edit, Search, Eye, Heart, FileText } from "lucide-react";
+import { Calendar, Clock, ArrowRight, Edit, Search, Eye, Heart, FileText, MoreVertical, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import Header from "@/components/Header";
 import { useBlogPosts } from "@/hooks/useBlogPost";
 import { useAdminAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const BlogList = () => {
@@ -16,6 +33,8 @@ const BlogList = () => {
   const { posts, loading } = useBlogPosts();
   const { isAdmin } = useAdminAuth();
   const { toast } = useToast();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
   const filteredPosts = useMemo(() => {
     if (!searchTerm) return posts;
@@ -29,6 +48,48 @@ const BlogList = () => {
 
   const handleReadPost = (slug: string) => {
     navigate(`/blog/${slug}`);
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    try {
+      const { error } = await supabase
+        .from('blog_posts')
+        .delete()
+        .eq('id', postId);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Post deleted successfully",
+        description: "The blog post has been removed.",
+      });
+
+      // Refresh the page to update the posts list
+      window.location.reload();
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      toast({
+        title: "Error deleting post",
+        description: "Failed to delete the blog post. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openDeleteDialog = (postId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent card click
+    setPostToDelete(postId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (postToDelete) {
+      handleDeletePost(postToDelete);
+      setDeleteDialogOpen(false);
+      setPostToDelete(null);
+    }
   };
 
   const handleWritePost = () => {
@@ -82,34 +143,61 @@ const BlogList = () => {
           {/* Blog Posts Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredPosts.map((post) => (
-              <Card 
-                key={post.id} 
+              <Card
+                key={post.id}
                 className="bg-gradient-card border-border hover:border-primary/50 transition-all duration-500 hover:shadow-portfolio-lg group cursor-pointer h-full flex flex-col"
                 onClick={() => handleReadPost(post.slug)}
               >
                 <CardHeader className="flex-1">
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      {new Date(post.created_at).toLocaleDateString('en-US', { 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
-                      })}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Eye className="h-4 w-4" />
-                      {post.read_count} reads
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Heart className="h-4 w-4" />
-                      {post.like_count || 0} likes
-                    </div>
-                    {post.status === 'draft' && (
-                      <div className="flex items-center gap-1 text-orange-500">
-                        <FileText className="h-4 w-4" />
-                        Draft
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        {new Date(post.created_at).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
                       </div>
+                      <div className="flex items-center gap-1">
+                        <Eye className="h-4 w-4" />
+                        {post.read_count} reads
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Heart className="h-4 w-4" />
+                        {post.like_count || 0} likes
+                      </div>
+                      {post.status === 'draft' && (
+                        <div className="flex items-center gap-1 text-orange-500">
+                          <FileText className="h-4 w-4" />
+                          Draft
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Admin Menu - Only visible to admins */}
+                    {isAdmin && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={(e) => openDeleteDialog(post.id, e)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Post
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     )}
                   </div>
                   <CardTitle className="text-foreground group-hover:text-primary transition-colors text-xl mb-3">
@@ -143,6 +231,27 @@ const BlogList = () => {
           )}
         </div>
       </main>
+
+      {/* Delete Confirmation Dialog - Only for admins */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Blog Post</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this blog post? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
