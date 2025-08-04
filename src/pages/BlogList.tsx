@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Calendar, Clock, ArrowRight, Edit, Search, Eye, Heart, FileText, MoreVertical, Trash2 } from "lucide-react";
+import { Calendar, ArrowRight, Edit, Search, Eye, Heart, FileText, MoreVertical, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import Header from "@/components/Header";
+import CacheControl from "@/components/CacheControl";
 import { useBlogPosts } from "@/hooks/useBlogPost";
 import { useAdminAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,7 +31,7 @@ import { useToast } from "@/hooks/use-toast";
 const BlogList = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const { posts, loading } = useBlogPosts();
+  const { data: posts = [], isLoading } = useBlogPosts();
   const { isAdmin } = useAdminAuth();
   const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -113,9 +114,15 @@ const BlogList = () => {
         <div className="container mx-auto px-6">
           {/* Header Section */}
           <div className="text-center mb-12">
-            <h1 className="text-5xl font-bold mb-4 bg-gradient-primary bg-clip-text text-transparent">
-              Blog Posts
-            </h1>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex-1" />
+              <h1 className="text-5xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                Blog Posts
+              </h1>
+              <div className="flex-1 flex justify-end">
+                {isAdmin && <CacheControl variant="button" showStats />}
+              </div>
+            </div>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
               Insights, tutorials, and thoughts on software development and technology
             </p>
@@ -141,8 +148,23 @@ const BlogList = () => {
           </div>
 
           {/* Blog Posts Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredPosts.map((post) => (
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[...Array(6)].map((_, i) => (
+                <Card key={i} className="bg-gradient-card border-border h-full">
+                  <CardHeader>
+                    <div className="animate-pulse space-y-3">
+                      <div className="h-4 bg-muted rounded w-3/4"></div>
+                      <div className="h-6 bg-muted rounded w-full"></div>
+                      <div className="h-4 bg-muted rounded w-5/6"></div>
+                    </div>
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredPosts.map((post) => (
               <Card
                 key={post.id}
                 className="bg-gradient-card border-border hover:border-primary/50 transition-all duration-500 hover:shadow-portfolio-lg group cursor-pointer h-full flex flex-col"
@@ -221,10 +243,11 @@ const BlogList = () => {
                   </Button>
                 </CardContent>
               </Card>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
-          {filteredPosts.length === 0 && (
+          {!isLoading && filteredPosts.length === 0 && (
             <div className="text-center py-16">
               <p className="text-xl text-muted-foreground">No posts found matching your search.</p>
             </div>

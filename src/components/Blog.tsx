@@ -7,7 +7,7 @@ import { useBlogPosts } from "@/hooks/useBlogPost";
 
 const Blog = () => {
   const navigate = useNavigate();
-  const { posts, loading } = useBlogPosts();
+  const { data: posts = [], isLoading: loading } = useBlogPosts();
 
   const handleReadPost = (slug: string) => {
     navigate(`/blog/${slug}`);

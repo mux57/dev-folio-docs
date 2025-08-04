@@ -1,24 +1,27 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useCache } from './useCache';
 import { useToast } from '@/hooks/use-toast';
 
 export interface ResumeLink {
   id: string;
-  name: string;
-  description: string | null;
-  file_url: string;
-  file_type: string;
-  file_size: string | null;
+  google_drive_link: string;
+  direct_download_link: string;
+  file_name: string;
+  file_size_mb: string;
+  last_updated: string;
   is_active: boolean;
-  display_order: number;
   created_at: string;
   updated_at: string;
 }
 
 // Hook to get active resume links
 export const useResumeLinks = () => {
+  const { getCacheConfig } = useCache();
+  const cacheConfig = getCacheConfig('resumeLinks');
+
   return useQuery({
-    queryKey: ['resume-links'],
+    queryKey: [cacheConfig.key],
     queryFn: async (): Promise<ResumeLink[]> => {
       const { data, error } = await supabase
         .from('resume_links')
@@ -31,8 +34,10 @@ export const useResumeLinks = () => {
 
       return data || [];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: cacheConfig.staleTime,
+    gcTime: cacheConfig.cacheTime,
+    refetchOnWindowFocus: false,
+    retry: 2,
   });
 };
 
@@ -91,16 +96,23 @@ export const downloadResume = async (resumeLink?: ResumeLink | null) => {
     return;
   }
 
+  // Use direct_download_link for better download experience, fallback to google_drive_link
+  const downloadUrl = resumeLink.direct_download_link || resumeLink.google_drive_link;
+
+  if (!downloadUrl || typeof downloadUrl !== 'string') {
+    console.error('Invalid or missing download URL in resume link:', resumeLink);
+    throw new Error('Resume download URL is missing or invalid');
+  }
+
   try {
-    // For Google Drive links, we can use them directly
-    if (resumeLink.file_url.includes('drive.google.com')) {
-      // Open Google Drive download link in new tab
-      window.open(resumeLink.file_url, '_blank');
+    // For Google Drive links, open directly
+    if (downloadUrl.includes('drive.google.com')) {
+      window.open(downloadUrl, '_blank');
       return;
     }
 
     // For other URLs, try to download with custom filename
-    const response = await fetch(resumeLink.file_url);
+    const response = await fetch(downloadUrl);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -111,16 +123,22 @@ export const downloadResume = async (resumeLink?: ResumeLink | null) => {
     
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${resumeLink.name.replace(/[^a-zA-Z0-9]/g, '_')}.${resumeLink.file_type}`;
+    // Use file_name from API response
+    const fileName = resumeLink.file_name || 'resume.pdf';
+    link.download = fileName;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     URL.revokeObjectURL(url);
   } catch (error) {
     console.error('Error downloading resume:', error);
-    // Fallback: open in new tab
-    window.open(resumeLink.file_url, '_blank');
+    // Fallback: open in new tab (only if URL is valid)
+    if (downloadUrl && typeof downloadUrl === 'string') {
+      window.open(downloadUrl, '_blank');
+    } else {
+      throw new Error('Cannot download resume: invalid download URL');
+    }
   }
 };
 
@@ -131,8 +149,9 @@ export const useDownloadResume = () => {
 
   const downloadResumeWithToast = async (customResumeLink?: ResumeLink) => {
     const resumeToDownload = customResumeLink || primaryResume;
-    
+
     if (!resumeToDownload) {
+      console.log('No resume found. Primary resume:', primaryResume);
       toast({
         title: "No resume available",
         description: "Resume link not found. Please try again later.",
@@ -140,6 +159,9 @@ export const useDownloadResume = () => {
       });
       return;
     }
+
+    // Debug log the resume data
+    console.log('Attempting to download resume:', resumeToDownload);
 
     try {
       await downloadResume(resumeToDownload);

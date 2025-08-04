@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useCache } from './useCache';
 
 export interface BlogPost {
   id: string;
@@ -76,38 +78,30 @@ export const useBlogPost = (slug: string) => {
 };
 
 export const useBlogPosts = () => {
-  const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { getCacheConfig } = useCache();
+  const cacheConfig = getCacheConfig('blogPosts');
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  return useQuery({
+    queryKey: [cacheConfig.key],
+    queryFn: async (): Promise<BlogPost[]> => {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-        const { data, error: fetchError } = await supabase
-          .from('blog_posts')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (fetchError) {
-          throw fetchError;
-        }
-
-        setPosts(data || []);
-      } catch (err) {
-        console.error('Error fetching blog posts:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch posts');
-      } finally {
-        setLoading(false);
+      if (error) {
+        console.error('Error fetching blog posts:', error);
+        throw error;
       }
-    };
 
-    fetchPosts();
-  }, []);
-
-  return { posts, loading, error };
+      return data || [];
+    },
+    staleTime: cacheConfig.staleTime,
+    gcTime: cacheConfig.cacheTime,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 2,
+  });
 };
 
 // Hook for liking/unliking a blog post (one like per user)

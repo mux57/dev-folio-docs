@@ -12,6 +12,7 @@ import { useUserPermissions } from "@/hooks/useUserPermissions";
 import Header from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
 import RichTextEditor from "@/components/RichTextEditor";
+import CacheControl from "@/components/CacheControl";
 import { AdminRoute } from "@/components/ProtectedRoute";
 import { useAdminAuth } from "@/hooks/useAuth";
 import { Shield, LogOut } from "lucide-react";
@@ -272,6 +273,7 @@ const BlogWrite = () => {
                   Admin
                 </Badge>
                 <span className="text-sm text-muted-foreground">{user?.email}</span>
+                <CacheControl variant="minimal" />
                 <Button
                   onClick={async () => {
                     try {

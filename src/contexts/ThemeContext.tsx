@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+// ✅ All 6 themes now supported by database constraint
 export type Theme = 'default' | 'ocean' | 'sunset' | 'light' | 'forest' | 'sepia';
 
 interface ThemeContextType {
@@ -19,6 +20,7 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+// ✅ All 6 themes now supported by updated database constraint
 export const themes = [
   {
     value: 'default' as Theme,
@@ -86,48 +88,57 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const loadThemeFromDatabase = async () => {
     try {
-      // Get real user session from Supabase
+      // 🔄 Step 1: Always load from localStorage first (instant, reliable)
+      const savedTheme = localStorage.getItem('portfolio-theme') as Theme;
+      if (savedTheme && themes.some(t => t.value === savedTheme)) {
+        setThemeState(savedTheme);
+        console.log(`✅ Theme loaded from localStorage: ${savedTheme}`);
+      } else {
+        console.log('No valid theme in localStorage, using default');
+      }
+
+      // 🔄 Step 2: Try to load from database for authenticated users (sync across devices)
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
 
       if (userId) {
-        // Fetch theme from Supabase database
-        const { data, error } = await supabase
+        console.log('🔍 Checking database for theme preferences...');
+
+        // Try 'theme' column directly (this should work based on your schema)
+        const { data: themeData, error: themeError } = await supabase
           .from('user_preferences')
           .select('theme')
           .eq('user_id', userId)
           .maybeSingle();
 
-        if (error) {
-          console.error('Error loading theme from database:', error);
-          // Fall back to localStorage
-          const savedTheme = localStorage.getItem('portfolio-theme') as Theme;
-          if (savedTheme && themes.some(t => t.value === savedTheme)) {
-            setThemeState(savedTheme);
+        if (themeError) {
+          console.warn('Database theme fetch error:', themeError);
+        } else if (themeData?.theme) {
+          const dbTheme = themeData.theme;
+          console.log(`📥 Database theme found: ${dbTheme}`);
+
+          // Validate and use database theme if different from localStorage
+          if (themes.some(t => t.value === dbTheme) && dbTheme !== savedTheme) {
+            setThemeState(dbTheme as Theme);
+            // Update localStorage to match database
+            localStorage.setItem('portfolio-theme', dbTheme);
+            console.log(`✅ Theme synced from database: ${dbTheme}`);
           }
-        } else if (data?.theme) {
-          setThemeState(data.theme as Theme);
-          console.log(`✅ Theme loaded from database: ${data.theme}`);
         } else {
-          // No theme found in database, use localStorage or default
-          const savedTheme = localStorage.getItem('portfolio-theme') as Theme;
-          if (savedTheme && themes.some(t => t.value === savedTheme)) {
-            setThemeState(savedTheme);
-          }
+          console.log('No theme found in database');
         }
       } else {
-        // No user, use localStorage
-        const savedTheme = localStorage.getItem('portfolio-theme') as Theme;
-        if (savedTheme && themes.some(t => t.value === savedTheme)) {
-          setThemeState(savedTheme);
-        }
+        console.log('No authenticated user, using localStorage only');
       }
     } catch (error) {
       console.error('Error in loadThemeFromDatabase:', error);
-      // Fall back to localStorage
+      // Ensure we always have a theme set
       const savedTheme = localStorage.getItem('portfolio-theme') as Theme;
       if (savedTheme && themes.some(t => t.value === savedTheme)) {
         setThemeState(savedTheme);
+      } else {
+        setThemeState('default');
+        localStorage.setItem('portfolio-theme', 'default');
       }
     } finally {
       setIsLoading(false);
@@ -151,25 +162,78 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Handle database save asynchronously without blocking UI
     const saveToDatabase = async () => {
       try {
+        // Validate theme value before saving to database
+        const validThemeValues = themes.map(t => t.value);
+        if (!validThemeValues.includes(newTheme)) {
+          console.warn(`Invalid theme value: ${newTheme}. Valid values are:`, validThemeValues);
+          return;
+        }
+
         // Get real user session from Supabase
         const { data: { session } } = await supabase.auth.getSession();
         const userId = session?.user?.id;
 
         if (userId) {
-          // Save theme to Supabase database - non-blocking
-          const { error } = await supabase
-            .from('user_preferences')
-            .upsert({
-              user_id: userId,
-              theme: newTheme
-            }, {
-              onConflict: 'user_id'
-            });
+          let saveSuccess = false;
 
-          if (error) {
-            console.error('Error saving theme to database:', error);
-          } else {
-            console.log(`✅ Theme saved to database: ${newTheme}`);
+          // Approach 1: Try saving to 'theme' column directly with validated value
+          try {
+            const { error: themeError } = await supabase
+              .from('user_preferences')
+              .upsert({
+                user_id: userId,
+                theme: newTheme // This is now validated to be one of: default, ocean, sunset, light, forest, sepia
+              }, {
+                onConflict: 'user_id'
+              });
+
+            if (!themeError) {
+              saveSuccess = true;
+              console.log(`✅ Theme saved to database (theme column): ${newTheme}`);
+            } else {
+              console.warn('Theme column save failed:', themeError);
+            }
+          } catch (e) {
+            console.warn('Theme column approach failed:', e);
+          }
+
+          // Approach 2: Try saving to 'preferences' JSONB column
+          if (!saveSuccess) {
+            try {
+              // First get existing preferences
+              const { data: existingData } = await supabase
+                .from('user_preferences')
+                .select('preferences')
+                .eq('user_id', userId)
+                .maybeSingle();
+
+              const updatedPreferences = {
+                ...((existingData as any)?.preferences || {}),
+                theme: newTheme // Validated theme value
+              };
+
+              const { error: prefError } = await supabase
+                .from('user_preferences')
+                .upsert({
+                  user_id: userId,
+                  preferences: updatedPreferences
+                }, {
+                  onConflict: 'user_id'
+                });
+
+              if (!prefError) {
+                saveSuccess = true;
+                console.log(`✅ Theme saved to database (preferences column): ${newTheme}`);
+              } else {
+                console.warn('Preferences column save failed:', prefError);
+              }
+            } catch (e) {
+              console.warn('Preferences column approach failed:', e);
+            }
+          }
+
+          if (!saveSuccess) {
+            console.log(`ℹ️ Database save failed, theme saved to localStorage: ${newTheme}`);
           }
         }
       } catch (error) {
