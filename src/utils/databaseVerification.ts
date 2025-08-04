@@ -1,11 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-
-// Get Supabase configuration from environment variables
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-// Create dedicated Supabase client for database verification (bypasses SQLite)
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+import { supabase as supabaseClient } from '@/lib/supabase';
 
 // Development logging only
 if (import.meta.env.DEV) {
@@ -52,7 +45,7 @@ export const verifyDatabaseConnection = async (): Promise<DatabaseStatus> => {
     status.connected = true;
 
     // Check each table
-    const tables = ['blog_posts', 'blog_likes', 'user_preferences', 'resume_links'];
+    const tables = ['blog_posts', 'blog_likes', 'user_preferences', 'resume_links'] as const;
 
     for (const table of tables) {
       try {
