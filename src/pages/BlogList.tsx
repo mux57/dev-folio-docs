@@ -7,11 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Calendar, Clock, ArrowRight, Edit, Search, Eye, Heart, FileText } from "lucide-react";
 import Header from "@/components/Header";
 import { useBlogPosts } from "@/hooks/useBlogPost";
+import { useAdminAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 const BlogList = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const { posts, loading } = useBlogPosts();
+  const { isAdmin } = useAdminAuth();
+  const { toast } = useToast();
 
   const filteredPosts = useMemo(() => {
     if (!searchTerm) return posts;
@@ -28,6 +32,15 @@ const BlogList = () => {
   };
 
   const handleWritePost = () => {
+    if (!isAdmin) {
+      toast({
+        title: "Access Denied",
+        description: "You don't have permission to access this page.",
+        variant: "destructive"
+      });
+      navigate('/admin/login');
+      return;
+    }
     navigate('/blog/write');
   };
 
@@ -60,7 +73,7 @@ const BlogList = () => {
               <div className="flex justify-center">
                 <Button onClick={handleWritePost} variant="hero" size="lg" className="group min-h-[44px]">
                   <Edit className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-                  Write New Post
+                  {isAdmin ? "Write New Post" : "Admin Login Required"}
                 </Button>
               </div>
             </div>

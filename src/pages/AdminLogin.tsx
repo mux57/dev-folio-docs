@@ -11,7 +11,8 @@ const AdminLoginPage = () => {
   useEffect(() => {
     // If already authenticated as admin, redirect to blog write
     if (!loading && isAdmin) {
-      navigate('/blog/write');
+      // Use window.location.href for immediate redirect without flash
+      window.location.href = '/blog/write';
     }
   }, [isAdmin, loading, navigate]);
 

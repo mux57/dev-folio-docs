@@ -85,17 +85,21 @@ const BlogWrite = () => {
     }
   }, [isEditMode, post]);
 
-  // Redirect if not admin
+  // Redirect if not admin (but don't show error during auth transitions)
   useEffect(() => {
     if (!permissionsLoading && !isAdmin) {
-      toast({
-        title: "Access Denied",
-        description: "You don't have permission to access this page.",
-        variant: "destructive"
-      });
+      // Only show error if user is actually authenticated but not admin
+      // Don't show error during initial load or auth transitions
+      if (user) {
+        toast({
+          title: "Access Denied",
+          description: "You don't have permission to access this page.",
+          variant: "destructive"
+        });
+      }
       navigate('/blog');
     }
-  }, [isAdmin, permissionsLoading, navigate, toast]);
+  }, [isAdmin, permissionsLoading, navigate, toast, user]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({

@@ -16,6 +16,7 @@ export const AdminLogin = ({ onSuccess, redirectTo }: AdminLoginProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showEmailLogin, setShowEmailLogin] = useState(false);
   
@@ -28,23 +29,25 @@ export const AdminLogin = ({ onSuccess, redirectTo }: AdminLoginProps) => {
 
     try {
       const { error } = await signInWithGoogle();
-      
+
       if (error) {
         setError(error.message || 'Failed to sign in with Google');
+        setIsLoading(false);
       } else {
+        // Set redirecting state and show persistent loader
+        setIsRedirecting(true);
         toast({
-          title: "Signing in...",
-          description: "Redirecting to Google for authentication.",
+          title: "Redirecting to Google...",
+          description: "Please wait while we redirect you to Google for authentication.",
         });
-        
-        if (onSuccess) {
-          onSuccess();
-        }
+
+        // Don't call onSuccess here - let the callback handle it
+        // Keep loading state active during redirect
       }
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred');
-    } finally {
       setIsLoading(false);
+      setIsRedirecting(false);
     }
   };
 
@@ -108,6 +111,23 @@ export const AdminLogin = ({ onSuccess, redirectTo }: AdminLoginProps) => {
     }
   };
 
+  // Show full-screen loader when redirecting to Google
+  if (isRedirecting) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
+          <h2 className="text-xl font-semibold">Redirecting to Google...</h2>
+          <p className="text-muted-foreground max-w-md">
+            Please wait while we redirect you to Google for authentication.
+            <br />
+            This may take a few seconds.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
@@ -131,16 +151,16 @@ export const AdminLogin = ({ onSuccess, redirectTo }: AdminLoginProps) => {
             <div className="space-y-4">
               <Button
                 onClick={handleGoogleSignIn}
-                disabled={isLoading}
+                disabled={isLoading || isRedirecting}
                 className="w-full"
                 size="lg"
               >
-                {isLoading ? (
+                {isLoading || isRedirecting ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <Mail className="mr-2 h-4 w-4" />
                 )}
-                Continue with Google
+                {isRedirecting ? "Redirecting to Google..." : "Continue with Google"}
               </Button>
 
               <div className="relative">
