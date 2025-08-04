@@ -238,15 +238,34 @@ export const useAuth = () => {
   // Sign out
   const signOut = async () => {
     try {
+      // Check if user is actually signed in before attempting sign out
+      const { data: { session } } = await authSupabase.auth.getSession();
+
+      if (!session) {
+        // User is already signed out, just clear local state
+        return { error: null };
+      }
+
       const { error } = await authSupabase.auth.signOut();
 
       if (error) {
+        // Handle specific error cases
+        if (error.message.includes('Auth session missing')) {
+          // Session already expired, treat as successful sign out
+          return { error: null };
+        }
         console.error('Sign out error:', error);
         throw error;
       }
 
       return { error: null };
-    } catch (error) {
+    } catch (error: any) {
+      // Handle network errors or other issues gracefully
+      if (error.message?.includes('Auth session missing') ||
+          error.message?.includes('403')) {
+        // Treat session missing or 403 as successful sign out
+        return { error: null };
+      }
       console.error('Sign out error:', error);
       return { error };
     }

@@ -20,8 +20,6 @@ export const useResumeLinks = () => {
   return useQuery({
     queryKey: ['resume-links'],
     queryFn: async (): Promise<ResumeLink[]> => {
-      console.log('🔍 Fetching resume links from database...');
-
       const { data, error } = await supabase
         .from('resume_links')
         .select('*');
@@ -31,7 +29,6 @@ export const useResumeLinks = () => {
         throw error;
       }
 
-      console.log('✅ Resume links fetched:', data);
       return data || [];
     },
     staleTime: 5 * 60 * 1000, // 5 minutes

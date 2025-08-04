@@ -15,10 +15,7 @@ import RichTextEditor from "@/components/RichTextEditor";
 import { AdminRoute } from "@/components/ProtectedRoute";
 import { useAdminAuth } from "@/hooks/useAuth";
 import { Shield, LogOut } from "lucide-react";
-import { verifyDatabaseConnection, runDatabaseDiagnostics } from "@/utils/databaseVerification";
 
-// Make verifyDatabase available globally
-(window as any).verifyDatabase = runDatabaseDiagnostics;
 
 const BlogWrite = () => {
   const navigate = useNavigate();
@@ -39,36 +36,6 @@ const BlogWrite = () => {
   });
 
   const [isPreview, setIsPreview] = useState(false);
-  const [databaseReady, setDatabaseReady] = useState(false);
-
-  // Verify database connection on component mount
-  useEffect(() => {
-    const checkDatabase = async () => {
-      try {
-        const status = await verifyDatabaseConnection();
-        setDatabaseReady(status.connected && status.tablesExist);
-
-        if (!status.connected) {
-          toast({
-            title: "Database Connection Error",
-            description: "Unable to connect to the database. Please check your connection.",
-            variant: "destructive"
-          });
-        } else if (!status.tablesExist) {
-          toast({
-            title: "Database Setup Required",
-            description: "Some database tables are missing. Please run the migration script.",
-            variant: "destructive"
-          });
-        }
-      } catch (error) {
-        console.error('Database verification failed:', error);
-        setDatabaseReady(false);
-      }
-    };
-
-    checkDatabase();
-  }, []);
 
   // Load existing post data for editing
   useEffect(() => {
@@ -306,7 +273,20 @@ const BlogWrite = () => {
                 </Badge>
                 <span className="text-sm text-muted-foreground">{user?.email}</span>
                 <Button
-                  onClick={() => signOut()}
+                  onClick={async () => {
+                    try {
+                      await signOut();
+                      toast({
+                        title: "Signed out successfully",
+                        description: "You have been logged out.",
+                      });
+                      navigate('/blog');
+                    } catch (error) {
+                      // Even if sign out fails, redirect to blog page
+                      // since the user intent is clear
+                      navigate('/blog');
+                    }
+                  }}
                   variant="ghost"
                   size="sm"
                   className="h-8 px-2"
@@ -475,21 +455,7 @@ const BlogWrite = () => {
                 </CardContent>
               </Card>
 
-              {/* Publishing Tips */}
-              <Card className="bg-gradient-card border-border">
-                <CardHeader>
-                  <CardTitle className="text-lg">Publishing Tips</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="text-sm text-muted-foreground space-y-2">
-                    <li>• Use a clear, descriptive title</li>
-                    <li>• Write an engaging excerpt to draw readers</li>
-                    <li>• Add relevant tags for better discoverability</li>
-                    <li>• Use preview mode to check formatting</li>
-                    <li>• Keep paragraphs short for better readability</li>
-                  </ul>
-                </CardContent>
-              </Card>
+
             </div>
           </div>
         </div>

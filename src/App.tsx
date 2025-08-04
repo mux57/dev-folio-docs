@@ -4,8 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
-// Import database verification to make functions globally available
-import "@/utils/databaseVerification";
+
 
 // Lazy load heavy components
 const Index = lazy(() => import("./pages/Index"));

@@ -27,12 +27,11 @@ export const usePerformance = () => {
           const fidObserver = new PerformanceObserver((list) => {
             const entries = list.getEntries();
             entries.forEach((entry) => {
-              console.log('FID:', entry.processingStart - entry.startTime);
-              
+              const fidEntry = entry as any; // Type assertion for FID entry
               if (typeof window !== 'undefined' && 'gtag' in window) {
                 (window as any).gtag('event', 'web_vitals', {
                   name: 'FID',
-                  value: Math.round(entry.processingStart - entry.startTime),
+                  value: Math.round(fidEntry.processingStart - fidEntry.startTime),
                   event_category: 'Performance'
                 });
               }
@@ -45,8 +44,9 @@ export const usePerformance = () => {
           const clsObserver = new PerformanceObserver((list) => {
             const entries = list.getEntries();
             entries.forEach((entry) => {
-              if (!entry.hadRecentInput) {
-                clsValue += entry.value;
+              const clsEntry = entry as any; // Type assertion for CLS entry
+              if (!clsEntry.hadRecentInput) {
+                clsValue += clsEntry.value;
               }
             });
 
