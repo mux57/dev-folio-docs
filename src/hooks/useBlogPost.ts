@@ -45,11 +45,19 @@ export const useBlogPost = (slug: string) => {
 
         setPost(data);
 
-        // Increment read count
-        await supabase
+        // Increment read count asynchronously (non-blocking)
+        // Don't await - let it happen in background
+        supabase
           .from('blog_posts')
           .update({ read_count: data.read_count + 1 })
-          .eq('id', data.id);
+          .eq('id', data.id)
+          .then(() => {
+            // Silently update local state if successful
+            setPost(prev => prev ? { ...prev, read_count: prev.read_count + 1 } : null);
+          })
+          .catch(() => {
+            // Silently fail - read count is not critical
+          });
 
       } catch (err) {
         console.error('Error fetching blog post:', err);

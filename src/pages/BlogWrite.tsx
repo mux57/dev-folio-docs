@@ -15,10 +15,7 @@ import RichTextEditor from "@/components/RichTextEditor";
 import { AdminRoute } from "@/components/ProtectedRoute";
 import { useAdminAuth } from "@/hooks/useAuth";
 import { Shield, LogOut } from "lucide-react";
-import { verifyDatabaseConnection, runDatabaseDiagnostics } from "@/utils/databaseVerification";
 
-// Make verifyDatabase available globally
-(window as any).verifyDatabase = runDatabaseDiagnostics;
 
 const BlogWrite = () => {
   const navigate = useNavigate();
@@ -39,38 +36,6 @@ const BlogWrite = () => {
   });
 
   const [isPreview, setIsPreview] = useState(false);
-  const [databaseReady, setDatabaseReady] = useState(false);
-
-  // Verify database connection on component mount
-  useEffect(() => {
-    const checkDatabase = async () => {
-      try {
-        const status = await verifyDatabaseConnection();
-        setDatabaseReady(status.connected && status.tablesExist);
-
-        if (!status.connected) {
-          toast({
-            title: "Database Connection Error",
-            description: "Unable to connect to the database. Please check your connection.",
-            variant: "destructive"
-          });
-        } else if (!status.tablesExist) {
-          toast({
-            title: "Database Setup Required",
-            description: "Some database tables are missing. Please run the migration script.",
-            variant: "destructive"
-          });
-        } else {
-          console.log('✅ Database is ready for blog operations');
-        }
-      } catch (error) {
-        console.error('Database verification failed:', error);
-        setDatabaseReady(false);
-      }
-    };
-
-    checkDatabase();
-  }, []);
 
   // Load existing post data for editing
   useEffect(() => {
@@ -85,17 +50,21 @@ const BlogWrite = () => {
     }
   }, [isEditMode, post]);
 
-  // Redirect if not admin
+  // Redirect if not admin (but don't show error during auth transitions)
   useEffect(() => {
     if (!permissionsLoading && !isAdmin) {
-      toast({
-        title: "Access Denied",
-        description: "You don't have permission to access this page.",
-        variant: "destructive"
-      });
+      // Only show error if user is actually authenticated but not admin
+      // Don't show error during initial load or auth transitions
+      if (user) {
+        toast({
+          title: "Access Denied",
+          description: "You don't have permission to access this page.",
+          variant: "destructive"
+        });
+      }
       navigate('/blog');
     }
-  }, [isAdmin, permissionsLoading, navigate, toast]);
+  }, [isAdmin, permissionsLoading, navigate, toast, user]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -147,18 +116,10 @@ const BlogWrite = () => {
       };
 
       const postSlug = isEditMode ? slug : generateSlug(formData.title);
-      const status = isDraft ? 'draft' : 'published';
-
-      console.log('💾 Saving blog post to database:', {
-        title: formData.title,
-        slug: postSlug,
-        status,
-        isEditMode
-      });
+      const status: 'draft' | 'published' = isDraft ? 'draft' : 'published';
 
       if (isEditMode && post) {
         // Update existing post
-        console.log('📝 Updating existing post:', post.id);
 
         const updateData = {
           title: formData.title,
@@ -181,8 +142,6 @@ const BlogWrite = () => {
           throw new Error(`Failed to update post: ${error.message}`);
         }
 
-        console.log('✅ Post updated successfully:', data);
-
         toast({
           title: isDraft ? "Draft Saved!" : "Post Updated!",
           description: isDraft
@@ -195,7 +154,6 @@ const BlogWrite = () => {
         }
       } else {
         // Create new post
-        console.log('🆕 Creating new post with slug:', postSlug);
 
         const insertData = {
           title: formData.title,
@@ -220,8 +178,6 @@ const BlogWrite = () => {
           console.error('❌ Insert error:', error);
           throw new Error(`Failed to create post: ${error.message}`);
         }
-
-        console.log('✅ Post created successfully:', data);
 
         toast({
           title: isDraft ? "Draft Saved!" : "Post Created!",
@@ -317,7 +273,20 @@ const BlogWrite = () => {
                 </Badge>
                 <span className="text-sm text-muted-foreground">{user?.email}</span>
                 <Button
-                  onClick={() => signOut()}
+                  onClick={async () => {
+                    try {
+                      await signOut();
+                      toast({
+                        title: "Signed out successfully",
+                        description: "You have been logged out.",
+                      });
+                      navigate('/blog');
+                    } catch (error) {
+                      // Even if sign out fails, redirect to blog page
+                      // since the user intent is clear
+                      navigate('/blog');
+                    }
+                  }}
                   variant="ghost"
                   size="sm"
                   className="h-8 px-2"
@@ -486,21 +455,7 @@ const BlogWrite = () => {
                 </CardContent>
               </Card>
 
-              {/* Publishing Tips */}
-              <Card className="bg-gradient-card border-border">
-                <CardHeader>
-                  <CardTitle className="text-lg">Publishing Tips</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="text-sm text-muted-foreground space-y-2">
-                    <li>• Use a clear, descriptive title</li>
-                    <li>• Write an engaging excerpt to draw readers</li>
-                    <li>• Add relevant tags for better discoverability</li>
-                    <li>• Use preview mode to check formatting</li>
-                    <li>• Keep paragraphs short for better readability</li>
-                  </ul>
-                </CardContent>
-              </Card>
+
             </div>
           </div>
         </div>

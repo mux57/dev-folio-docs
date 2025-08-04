@@ -1,21 +1,9 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase as supabaseClient } from '@/lib/supabase';
 
-// Get Supabase configuration from environment variables
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-// Create dedicated Supabase client for database verification (bypasses SQLite)
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-
-// Log configuration for debugging
-console.log('🔧 Database Verification Configuration:');
-console.log('- Supabase URL:', SUPABASE_URL);
-console.log('- Using env vars:', {
-  url: !!import.meta.env.VITE_SUPABASE_URL,
-  key: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
-  auth: import.meta.env.VITE_USE_SUPABASE_AUTH,
-  admin: import.meta.env.VITE_ADMIN_EMAIL
-});
+// Development logging only
+if (import.meta.env.DEV) {
+  console.log('🔧 Database Verification Configuration initialized');
+}
 
 export interface DatabaseStatus {
   connected: boolean;
@@ -43,10 +31,8 @@ export const verifyDatabaseConnection = async (): Promise<DatabaseStatus> => {
   };
 
   try {
-    console.log('🔍 Verifying database connection...');
-
     // Test basic connection
-    const { data: connectionTest, error: connectionError } = await supabaseClient
+    const { error: connectionError } = await supabaseClient
       .from('blog_posts')
       .select('id')
       .limit(1);
@@ -57,11 +43,10 @@ export const verifyDatabaseConnection = async (): Promise<DatabaseStatus> => {
     }
 
     status.connected = true;
-    console.log('✅ Database connection successful');
 
     // Check each table
-    const tables = ['blog_posts', 'blog_likes', 'user_preferences', 'resume_links'];
-    
+    const tables = ['blog_posts', 'blog_likes', 'user_preferences', 'resume_links'] as const;
+
     for (const table of tables) {
       try {
         const { error } = await supabaseClient
@@ -74,7 +59,6 @@ export const verifyDatabaseConnection = async (): Promise<DatabaseStatus> => {
           status.tableStatus[table as keyof typeof status.tableStatus] = false;
         } else {
           status.tableStatus[table as keyof typeof status.tableStatus] = true;
-          console.log(`✅ Table ${table} exists and accessible`);
         }
       } catch (err: any) {
         status.errors.push(`Table ${table}: ${err.message}`);
@@ -151,20 +135,20 @@ export const testBlogPostCreation = async (): Promise<boolean> => {
 
 // Helper function to run full database verification
 export const runDatabaseDiagnostics = async () => {
-  console.log('🔍 Running database diagnostics...');
-  
   const status = await verifyDatabaseConnection();
   const canCreatePosts = status.tablesExist ? await testBlogPostCreation() : false;
 
-  console.log('📊 Database Diagnostics Results:');
-  console.log('- Connected:', status.connected);
-  console.log('- All tables exist:', status.tablesExist);
-  console.log('- Can create posts:', canCreatePosts);
-  console.log('- Table status:', status.tableStatus);
-  
-  if (status.errors.length > 0) {
-    console.log('❌ Errors found:');
-    status.errors.forEach(error => console.log('  -', error));
+  if (import.meta.env.DEV) {
+    console.log('📊 Database Diagnostics Results:');
+    console.log('- Connected:', status.connected);
+    console.log('- All tables exist:', status.tablesExist);
+    console.log('- Can create posts:', canCreatePosts);
+    console.log('- Table status:', status.tableStatus);
+
+    if (status.errors.length > 0) {
+      console.log('❌ Errors found:');
+      status.errors.forEach(error => console.log('  -', error));
+    }
   }
 
   return {
@@ -173,16 +157,18 @@ export const runDatabaseDiagnostics = async () => {
   };
 };
 
-// Test environment variables configuration
+// Test environment variables configuration (development only)
 export const testEnvironmentVariables = () => {
+  if (!import.meta.env.DEV) return true;
+
   console.log('🧪 Testing Environment Variables Configuration:');
 
   const envVars = {
-    VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
+    VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL ? '✅ Set' : '❌ Missing',
     VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing',
     VITE_USE_SUPABASE_AUTH: import.meta.env.VITE_USE_SUPABASE_AUTH,
-    VITE_ADMIN_EMAIL: import.meta.env.VITE_ADMIN_EMAIL,
-    VITE_SUPABASE_PROJECT_ID: import.meta.env.VITE_SUPABASE_PROJECT_ID
+    VITE_ADMIN_EMAIL: import.meta.env.VITE_ADMIN_EMAIL ? '✅ Set' : '❌ Missing',
+    VITE_SUPABASE_PROJECT_ID: import.meta.env.VITE_SUPABASE_PROJECT_ID ? '✅ Set' : '❌ Missing'
   };
 
   console.table(envVars);
@@ -200,7 +186,9 @@ export const testEnvironmentVariables = () => {
   }
 };
 
-// Make functions available globally for debugging
-(window as any).verifyDatabase = runDatabaseDiagnostics;
-(window as any).testBlogCreation = testBlogPostCreation;
-(window as any).testEnvironment = testEnvironmentVariables;
+// Make functions available globally for debugging (development only)
+if (import.meta.env.DEV) {
+  (window as any).verifyDatabase = runDatabaseDiagnostics;
+  (window as any).testBlogCreation = testBlogPostCreation;
+  (window as any).testEnvironment = testEnvironmentVariables;
+}
