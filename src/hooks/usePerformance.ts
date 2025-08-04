@@ -11,9 +11,8 @@ export const usePerformance = () => {
           const lcpObserver = new PerformanceObserver((list) => {
             const entries = list.getEntries();
             const lastEntry = entries[entries.length - 1];
-            console.log('LCP:', lastEntry.startTime);
-            
-            // You can send this data to analytics
+
+            // Send data to analytics
             if (typeof window !== 'undefined' && 'gtag' in window) {
               (window as any).gtag('event', 'web_vitals', {
                 name: 'LCP',
@@ -50,8 +49,7 @@ export const usePerformance = () => {
                 clsValue += entry.value;
               }
             });
-            console.log('CLS:', clsValue);
-            
+
             if (typeof window !== 'undefined' && 'gtag' in window) {
               (window as any).gtag('event', 'web_vitals', {
                 name: 'CLS',

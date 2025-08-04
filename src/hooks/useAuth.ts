@@ -3,7 +3,7 @@ import type { User, Session } from '@supabase/supabase-js';
 import { supabase as authSupabase } from '@/lib/supabase';
 
 // Always use Supabase authentication
-const USE_SUPABASE_AUTH = true;
+const USE_SUPABASE_AUTH = import.meta.env.VITE_USE_SUPABASE_AUTH === 'true';
 
 // Get admin email from environment (required)
 const PORTFOLIO_OWNER_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
@@ -12,106 +12,86 @@ const PORTFOLIO_OWNER_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Debug logging
-console.log('🔧 Auth Configuration:');
-console.log('- Supabase URL:', SUPABASE_URL);
-console.log('- Auth client created:', !!authSupabase);
-console.log('- Use Supabase Auth:', USE_SUPABASE_AUTH);
-console.log('- Admin Email:', PORTFOLIO_OWNER_EMAIL);
+// Helper functions for development (remove in production)
+if (import.meta.env.DEV) {
+  (window as any).enableSupabaseAuth = () => {
+    localStorage.setItem('force_supabase_auth', 'true');
+    console.log('✅ Supabase authentication enabled! Refresh the page.');
+  };
 
-// Temporary bypass for testing (remove in production)
-const TEMP_BYPASS = localStorage.getItem('temp_admin_bypass') === 'true';
-if (TEMP_BYPASS) {
-  console.log('🚨 TEMPORARY ADMIN BYPASS ENABLED');
-}
+  (window as any).disableSupabaseAuth = () => {
+    localStorage.removeItem('force_supabase_auth');
+    console.log('✅ Supabase authentication disabled! Using local mock auth.');
+  };
 
-// Helper function to enable Supabase auth (call in browser console)
-(window as any).enableSupabaseAuth = () => {
-  localStorage.setItem('force_supabase_auth', 'true');
-  console.log('✅ Supabase authentication enabled! Refresh the page.');
-  console.log('🔗 Admin login URL: http://localhost:8080/admin/login');
-};
+  // Global function to test OAuth configuration (development only)
+  (window as any).testOAuthConfig = () => {
+    console.log('🔧 OAuth Configuration Test:');
+    console.log('- Current Origin:', window.location.origin);
+    console.log('- Expected Callback:', `${window.location.origin}/admin/callback`);
+    console.log('- Use Supabase Auth:', USE_SUPABASE_AUTH);
 
-(window as any).disableSupabaseAuth = () => {
-  localStorage.removeItem('force_supabase_auth');
-  console.log('✅ Supabase authentication disabled! Using local mock auth.');
-};
+    console.log('\n📋 Supabase Setup Checklist:');
+    console.log('1. Site URL should be:', window.location.origin);
+    console.log('2. Redirect URLs should include:', `${window.location.origin}/admin/callback`);
+    console.log('3. Google OAuth should be enabled in Supabase Auth settings');
+    console.log('4. Google OAuth redirect URI should be: https://[your-project].supabase.co/auth/v1/callback');
+  };
 
-// Global function to test OAuth configuration
-(window as any).testOAuthConfig = () => {
-  console.log('🔧 OAuth Configuration Test:');
-  console.log('- Supabase URL:', SUPABASE_URL);
-  console.log('- Current Origin:', window.location.origin);
-  console.log('- Expected Callback:', `${window.location.origin}/admin/callback`);
-  console.log('- Admin Email:', PORTFOLIO_OWNER_EMAIL);
-  console.log('- Use Supabase Auth:', USE_SUPABASE_AUTH);
-
-  console.log('\n📋 Supabase Setup Checklist:');
-  console.log('1. Site URL should be:', window.location.origin);
-  console.log('2. Redirect URLs should include:', `${window.location.origin}/admin/callback`);
-  console.log('3. Google OAuth should be enabled in Supabase Auth settings');
-  console.log('4. Google OAuth redirect URI should be: https://[your-project].supabase.co/auth/v1/callback');
-};
-
-// Global session check function for debugging
-(window as any).checkAuthSession = async () => {
-  try {
-    const { data: { session }, error } = await authSupabase.auth.getSession();
-
-    console.log('🔍 Current Auth Session:', {
-      hasSession: !!session,
-      userEmail: session?.user?.email,
-      isAdmin: session?.user?.email === PORTFOLIO_OWNER_EMAIL,
-      error: error?.message,
-      sessionData: session,
-      currentUrl: window.location.href,
-      hasAuthParams: window.location.href.includes('access_token') || window.location.href.includes('code')
-    });
-
-    return session;
-  } catch (error) {
-    console.error('Session check failed:', error);
-    return null;
-  }
-};
-
-// Global function to manually process auth callback
-(window as any).processAuthCallback = async () => {
-  try {
-    console.log('🔄 Manually processing auth callback...');
-
-    // Check if URL has auth parameters
-    const url = window.location.href;
-    const hasAuthParams = url.includes('access_token') || url.includes('code') || url.includes('refresh_token');
-
-    console.log('🔍 URL Analysis:', {
-      currentUrl: url,
-      hasAuthParams: hasAuthParams,
-      urlParams: new URLSearchParams(window.location.search).toString(),
-      hashParams: window.location.hash
-    });
-
-    if (hasAuthParams) {
-      // Force session refresh to pick up auth from URL
+  // Global session check function for debugging (development only)
+  (window as any).checkAuthSession = async () => {
+    try {
       const { data: { session }, error } = await authSupabase.auth.getSession();
 
-      console.log('🔍 Session after URL processing:', {
+      console.log('🔍 Current Auth Session:', {
         hasSession: !!session,
-        userEmail: session?.user?.email,
         error: error?.message,
-        session: session
+        hasAuthParams: window.location.href.includes('access_token') || window.location.href.includes('code')
       });
 
-      return { session, error };
-    } else {
-      console.log('❌ No auth parameters found in URL');
-      return { session: null, error: null };
+      return session;
+    } catch (error) {
+      console.error('Session check failed:', error);
+      return null;
     }
-  } catch (error) {
-    console.error('Auth callback processing failed:', error);
-    return { session: null, error };
-  }
-};
+  };
+
+  // Global function to manually process auth callback (development only)
+  (window as any).processAuthCallback = async () => {
+    try {
+      console.log('🔄 Manually processing auth callback...');
+
+      // Check if URL has auth parameters
+      const hasAuthParams = window.location.href.includes('access_token') ||
+                           window.location.href.includes('code') ||
+                           window.location.href.includes('refresh_token');
+
+      console.log('🔍 URL Analysis:', {
+        hasAuthParams: hasAuthParams,
+        urlParams: new URLSearchParams(window.location.search).toString(),
+        hashParams: window.location.hash
+      });
+
+      if (hasAuthParams) {
+        // Force session refresh to pick up auth from URL
+        const { data: { session }, error } = await authSupabase.auth.getSession();
+
+        console.log('🔍 Session after URL processing:', {
+          hasSession: !!session,
+          error: error?.message
+        });
+
+        return { session, error };
+      } else {
+        console.log('❌ No auth parameters found in URL');
+        return { session: null, error: null };
+      }
+    } catch (error) {
+      console.error('Auth callback processing failed:', error);
+      return { session: null, error };
+    }
+  };
+}
 
 interface AuthState {
   user: User | null;
@@ -135,7 +115,6 @@ export const useAuth = () => {
     const getInitialSession = async () => {
       try {
         // Use Supabase authentication
-        console.log('🔐 Using Supabase authentication');
         const { data: { session }, error } = await authSupabase.auth.getSession();
 
         if (error) {
@@ -143,14 +122,6 @@ export const useAuth = () => {
         }
 
         const isAdmin = session?.user?.email === PORTFOLIO_OWNER_EMAIL;
-
-        // Debug logging for admin check
-        console.log('🔍 Admin Check Debug:', {
-          userEmail: session?.user?.email,
-          adminEmail: PORTFOLIO_OWNER_EMAIL,
-          isAdmin: isAdmin,
-          emailMatch: session?.user?.email === PORTFOLIO_OWNER_EMAIL
-        });
 
         setAuthState({
           user: session?.user || null,
@@ -169,27 +140,18 @@ export const useAuth = () => {
     // Listen for auth changes
     const { data: { subscription } } = authSupabase.auth.onAuthStateChange(
       async (event: string, session: Session | null) => {
-        console.log('🔄 Auth state changed:', event, session?.user?.email);
-
         const isAdmin = session?.user?.email === PORTFOLIO_OWNER_EMAIL;
 
-        // Debug logging for auth state change
-        console.log('🔄 Auth State Change Debug:', {
-          event: event,
-          userEmail: session?.user?.email,
-          adminEmail: PORTFOLIO_OWNER_EMAIL,
-          isAdmin: isAdmin,
-          sessionExists: !!session,
-          userExists: !!session?.user
-        });
-
         // Handle different auth events
-        if (event === 'SIGNED_IN' && session) {
-          console.log('✅ User signed in successfully');
-        } else if (event === 'SIGNED_OUT') {
-          console.log('👋 User signed out');
-        } else if (event === 'TOKEN_REFRESHED') {
-          console.log('🔄 Token refreshed');
+        if (import.meta.env.DEV) {
+          console.log('🔄 Auth state changed:', event);
+          if (event === 'SIGNED_IN' && session) {
+            console.log('✅ User signed in successfully');
+          } else if (event === 'SIGNED_OUT') {
+            console.log('👋 User signed out');
+          } else if (event === 'TOKEN_REFRESHED') {
+            console.log('🔄 Token refreshed');
+          }
         }
 
         setAuthState({
@@ -208,8 +170,6 @@ export const useAuth = () => {
   const signInWithGoogle = async () => {
     try {
       if (USE_SUPABASE_AUTH) {
-        console.log('� Starting Google OAuth with Supabase');
-
         // Validate Supabase configuration before attempting OAuth
         if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
           throw new Error('Supabase configuration is missing. Please check environment variables.');
@@ -221,7 +181,6 @@ export const useAuth = () => {
         }
 
         const redirectUrl = `${window.location.origin}/admin/callback`;
-        console.log('🔗 OAuth redirect URL:', redirectUrl);
 
         const { data, error } = await authSupabase.auth.signInWithOAuth({
           provider: 'google',
@@ -248,7 +207,6 @@ export const useAuth = () => {
           }
         }
 
-        console.log('✅ OAuth initiated successfully');
         return { data, error: null };
       }
     } catch (error) {
@@ -316,15 +274,14 @@ export const useAuth = () => {
   // Manual session check for debugging
   const checkSession = async () => {
     try {
-      console.log('🔍 Manual session check...');
       const { data: { session }, error } = await authSupabase.auth.getSession();
 
-      console.log('🔍 Session check result:', {
-        session: !!session,
-        user: session?.user?.email,
-        error: error?.message,
-        isAdmin: session?.user?.email === PORTFOLIO_OWNER_EMAIL
-      });
+      if (import.meta.env.DEV) {
+        console.log('🔍 Session check result:', {
+          session: !!session,
+          error: error?.message
+        });
+      }
 
       return { session, error };
     } catch (error) {

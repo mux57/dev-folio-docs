@@ -60,8 +60,6 @@ const BlogWrite = () => {
             description: "Some database tables are missing. Please run the migration script.",
             variant: "destructive"
           });
-        } else {
-          console.log('✅ Database is ready for blog operations');
         }
       } catch (error) {
         console.error('Database verification failed:', error);
@@ -151,18 +149,10 @@ const BlogWrite = () => {
       };
 
       const postSlug = isEditMode ? slug : generateSlug(formData.title);
-      const status = isDraft ? 'draft' : 'published';
-
-      console.log('💾 Saving blog post to database:', {
-        title: formData.title,
-        slug: postSlug,
-        status,
-        isEditMode
-      });
+      const status: 'draft' | 'published' = isDraft ? 'draft' : 'published';
 
       if (isEditMode && post) {
         // Update existing post
-        console.log('📝 Updating existing post:', post.id);
 
         const updateData = {
           title: formData.title,
@@ -185,8 +175,6 @@ const BlogWrite = () => {
           throw new Error(`Failed to update post: ${error.message}`);
         }
 
-        console.log('✅ Post updated successfully:', data);
-
         toast({
           title: isDraft ? "Draft Saved!" : "Post Updated!",
           description: isDraft
@@ -199,7 +187,6 @@ const BlogWrite = () => {
         }
       } else {
         // Create new post
-        console.log('🆕 Creating new post with slug:', postSlug);
 
         const insertData = {
           title: formData.title,
@@ -224,8 +211,6 @@ const BlogWrite = () => {
           console.error('❌ Insert error:', error);
           throw new Error(`Failed to create post: ${error.message}`);
         }
-
-        console.log('✅ Post created successfully:', data);
 
         toast({
           title: isDraft ? "Draft Saved!" : "Post Created!",

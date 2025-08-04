@@ -11,18 +11,14 @@ const AuthCallback = () => {
 
   useEffect(() => {
     const handleAuthCallback = async () => {
-      console.log('🔄 Processing auth callback...');
-
       // Wait longer for auth state to settle properly
       await new Promise(resolve => setTimeout(resolve, 1500));
 
       if (loading) {
-        console.log('⏳ Still loading auth state...');
         return;
       }
 
       if (user && isAdmin) {
-        console.log('✅ Admin login successful:', user.email);
         toast({
           title: "Login Successful!",
           description: `Welcome back, ${user.email}`,
@@ -30,7 +26,6 @@ const AuthCallback = () => {
         // Navigate directly without showing intermediate pages
         window.location.href = '/blog/write';
       } else if (user && !isAdmin) {
-        console.log('❌ User not admin:', user.email);
         toast({
           title: "Access Denied",
           description: "You don't have admin permissions for this portfolio.",
@@ -39,7 +34,6 @@ const AuthCallback = () => {
         // Navigate directly to avoid flash
         window.location.href = '/blog';
       } else {
-        console.log('❌ No user found after callback');
         toast({
           title: "Login Failed",
           description: "Authentication was not completed. Please try again.",
