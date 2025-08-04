@@ -81,25 +81,18 @@ export const usePerformance = () => {
   }, []);
 };
 
-// Preload critical resources
+// Preload critical resources that are actually used immediately
 export const preloadCriticalResources = () => {
   useEffect(() => {
-    // Preload critical fonts
-    const fontLinks = [
-      'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'
-    ];
+    // Only preload resources that are used immediately on page load
+    // The og-image.jpg is only used for social sharing, not immediate page render
+    // The Google Fonts are already preconnected in index.html, no need to preload
 
-    fontLinks.forEach(href => {
-      const link = document.createElement('link');
-      link.rel = 'preload';
-      link.as = 'style';
-      link.href = href;
-      document.head.appendChild(link);
-    });
-
-    // Preload critical images
-    const criticalImages = [
-      '/og-image.jpg'
+    // If you need to preload specific images that appear above the fold, add them here
+    // For example, hero background images or profile pictures
+    const criticalImages: string[] = [
+      // Add only images that are visible immediately on page load
+      // '/hero-background.jpg', // Example: if you have a hero background
     ];
 
     criticalImages.forEach(src => {

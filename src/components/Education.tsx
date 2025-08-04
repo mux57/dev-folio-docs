@@ -73,19 +73,6 @@ const Education = () => {
             </Card>
           ))}
         </div>
-
-        {/* Academic Achievements */}
-        <div className="mt-16 text-center">
-          <div className="inline-flex items-center gap-4 bg-gradient-card border border-border rounded-lg px-6 py-4">
-            <GraduationCap className="h-8 w-8 text-primary" />
-            <div className="text-left">
-              <h3 className="font-semibold text-foreground">Academic Excellence</h3>
-              <p className="text-sm text-muted-foreground">
-                Strong foundation from NIT Surathkal, one of India's premier technical institutes
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   );
